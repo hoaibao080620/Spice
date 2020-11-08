@@ -1,0 +1,64 @@
+﻿@model IEnumerable<MenuItem>
+@{
+    ViewData["Title"] = "Index";
+}
+
+<br />
+<div class="border backgroundWhiteBorder">
+    <div class="row">
+        <div class="col-6">
+            <h2 class="text-info">Menu Item List</h2>
+        </div>
+        <div class="col-6 text-right">
+            <a class="btn btn-info" asp-action="Create">Create Item</a>
+        </div>
+    </div>
+
+    <div>
+        @if (Model.Count() > 0) {
+            <table class="table table-striped">
+                <tr>
+                    <th>
+                        Image
+                    </th>
+                    <th>
+                        Name
+                    </th>
+                    <th>
+                        Description
+                    </th>
+                    <th>
+                        Price
+                    </th>
+
+                    <th>
+                        Category Name
+                    </th>
+                    <th>
+                        Sub Category Name
+                    </th>
+                    <th>
+                    </th>
+                </tr>
+                @foreach (var item in Model) {
+            <tr>
+                <td><img src="@item.Image" width="50px" height="50px"/></td>
+                <td>@item.ItemName</td>
+                <td>@item.description</td>
+                
+                <td>@item.Price</td>
+                <td>@item.Category.Name</td>
+                <td>@item.SubCategory.SubCategoryName</td>
+                <td class="text-right">
+                    <partial name="_GroupButtonPartial" model=@item.Id />
+                </td>
+            </tr>
+
+                }
+            </table>
+        }
+        else {
+            <p>Menu Items list is empty</p>
+        }
+    </div>
+</div>

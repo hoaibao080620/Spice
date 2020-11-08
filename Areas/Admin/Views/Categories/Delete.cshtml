@@ -1,0 +1,16 @@
+﻿@model Category 
+@{
+    ViewData["Title"] = "Delete";
+}
+
+<h1 class="text-info">Do you really want to delete ?</h1>
+<form method="post" asp-action="Delete" class="backgroundWhiteBorder">
+    <div class="form-group">
+        <label asp-for="Name">Name</label>
+        <input type="text" class="form-control" readonly asp-for="Name" placeholder="Enter Name" >
+    </div>
+    <input class="btn btn-danger" type="submit" value="Yes" />
+    <a class="btn btn-info" asp-action="Index">Back to list</a>
+</form>
+
+

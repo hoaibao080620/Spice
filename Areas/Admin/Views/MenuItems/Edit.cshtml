@@ -1,0 +1,128 @@
+﻿@model Spice.Models.ViewModels.MenuItemAndCategoriesViewModel
+@{
+    ViewData["Title"] = "Edit";
+}
+
+
+<div class="backgroundWhiteBorder row">
+    <div class="col-9">
+        <form method="post" asp-controller="MenuItems" asp-action="Edit" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Item.Id" value=@Model.Item.Id/>
+            <div class="form-group row">
+                <div class="col-2">
+                    <label class="col-form-label">Item Name</label>
+                </div>
+                <div class="col-7 offset-1">
+                    <input type="text" class="form-control" asp-for="Item.ItemName">
+                </div>
+                <span asp-validation-for="Item.ItemName" class="text-danger"></span>
+            </div>
+
+            <div class="form-group row">
+                <div class="col-2">
+                    <label class="col-form-label">Description</label>
+                </div>
+                <div class="col-7 offset-1">
+                    <textarea asp-for="Item.description" class="form-control"></textarea>
+                </div>
+                <span asp-validation-for="Item.description" class="text-danger"></span>
+            </div>
+
+            <div class="form-group row">
+                <div class="col-2">
+                    <label class="col-form-label">Price</label>
+                </div>
+                <div class="col-7 offset-1">
+                    <input type="number" class="form-control" asp-for="Item.Price" required>
+                </div>
+                <span asp-validation-for="Item.Price" class="text-danger"></span>
+            </div>
+
+            <div class="form-group row">
+                <div class="col-2">
+                    <label class="col-form-label">Image</label>
+                </div>
+                <div class="col-5 offset-1">
+                    <input type="file" name="files" class="form-control">
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <div class="col-3">
+                    <label class="col-form-label">Category Name</label>
+                </div>
+                <div class="col-7">
+                    <select id="categorySelect" asp-for="Item.CategoryId" class="custom-select">
+                        @foreach (var item in Model.Categories) {
+                            <option value=@item.Id>@item.Name</option>
+                        }
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="form-group row">
+                <div class="col-3">
+                    <label class="col-form-label">Sub Category Name</label>
+                </div>
+                <div class="col-7">
+                    <select id="SubCategoryList" asp-for="Item.SubCategoryId" class="custom-select">
+                    </select>
+                </div>
+
+            </div>
+
+
+            <div class="form-group row">
+                <div class="col-3">
+                    <label class="col-form-label">Spicy</label>
+                </div>
+                <div class="col-7">
+                    <select asp-for="Item.Spicyness" asp-items="Html.GetEnumSelectList<MenuItem.ESpice>()" class="form-control"></select>
+                </div>
+
+            </div>
+            <div style="margin:0 auto; text-align: center; padding-top : .5rem">
+                <button type="submit" class="btn btn-primary">Submit</button>
+                <a class="btn btn-info" asp-action="Index">Back to list</a>
+            </div>
+
+
+        </form>
+    </div>
+    <div class="col-3">
+        <img src="@Model.Item.Image" width="100%"/>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function updateSubCategories() {
+            var id = document.getElementById("categorySelect").value;
+            var list = $("#SubCategoryList");
+            $.ajax({
+                url: "/Admin/SubCategories/GetSubCategoriesExist/" + id,
+                type: "GET",
+                dataType: "text",
+                success: (data) => {
+                    var subCategories = JSON.parse(data);
+                    console.log(subCategories);
+                    list.html("");
+                    for (var item of subCategories) {
+                        list.append(`<option value=${item.id}>${item.subCategoryName}</option>`)
+                    }
+                }
+            })
+        }
+
+
+        $("document").ready(() => {
+            updateSubCategories();
+        })
+
+        $("#categorySelect").on("change", () => {
+            updateSubCategories();
+        })
+    </script>
+}
