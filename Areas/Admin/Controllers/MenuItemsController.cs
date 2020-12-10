@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -14,30 +13,32 @@ using Spice.Utilities;
 namespace Spice.Areas.Admin.Controllers {
     [Area("Admin")]
     public class MenuItemsController : Controller {
-        private readonly IWebHostEnvironment webHost;
-        private readonly ApplicationDbContext dbContext;
-        private readonly IWebHostEnvironment hostingEnvironment;
+        private readonly ApplicationDbContext _dbContext;
+        private readonly IWebHostEnvironment _hostingEnvironment;
 
-        public MenuItemsController(IWebHostEnvironment webHost, ApplicationDbContext dbContext
+        public MenuItemsController(ApplicationDbContext dbContext
             ,IWebHostEnvironment hostingEnvironment) {
-            this.webHost = webHost;
-            this.dbContext = dbContext;
-            this.hostingEnvironment = hostingEnvironment;
+            _dbContext = dbContext;
+            _hostingEnvironment = hostingEnvironment;
         }
+        
         public async Task<IActionResult> Index() {
-            var Items =await dbContext.MenuItems.Include(m => m.Category).Include(m => m.SubCategory).ToListAsync();
-            //var model = new MenuItemAndCategoriesViewModel() {
-            //    Item = new MenuItem(),
-            //    Categories = await task
-            //};
-            return View(Items);
+            var items =await _dbContext.MenuItems.Include(m => m.Category)
+                .Include(m => m.SubCategory).ToListAsync();
+            // var model = new MenuItemAndCategoriesViewModel() {
+            //     Item = new MenuItem(),
+            //     Categories = await task
+            // };
+            return View(items);
         }
 
         [HttpGet]
         public async Task<IActionResult> Create() {
-            var task = dbContext.Categories.ToListAsync();
+            var task = _dbContext.Categories.ToListAsync();
             var model = new MenuItemAndCategoriesViewModel() {
-                Item = new MenuItem(),
+                Item = new MenuItem() {
+                    ItemName = "hello this is first time test"
+                },
                 Categories = await task
             };
             return View(model);
@@ -47,33 +48,32 @@ namespace Spice.Areas.Admin.Controllers {
         public async Task<IActionResult> Create(MenuItemAndCategoriesViewModel menuItem) {
             
             if(!ModelState.IsValid) {
-                menuItem.Categories = await dbContext.Categories.ToListAsync();
+                menuItem.Categories = await _dbContext.Categories.ToListAsync();
                 return View(menuItem);
             }
 
-            dbContext.MenuItems.Add(menuItem.Item);
-            await dbContext.SaveChangesAsync();
+            await _dbContext.MenuItems.AddAsync(menuItem.Item);
+            await _dbContext.SaveChangesAsync();
 
-            var files = HttpContext.Request.Form.Files;
+            var fileFromForm = Request.Form.Files;
+            var webRoot = _hostingEnvironment.WebRootPath;
 
-            var webRootPath = hostingEnvironment.WebRootPath;
-            var itemFromDb = await dbContext.MenuItems.FindAsync(menuItem.Item.Id);
+            var itemFromDb = await _dbContext.MenuItems.FindAsync(menuItem.Item.Id);
 
-            if(files.Count>0) {
-                var upload = Path.Combine(webRootPath, "images");
-                var extensions = Path.GetExtension(files[0].FileName);
-                using(var fileStream = new FileStream(Path.Combine(upload,itemFromDb.Id+extensions)
-                    ,FileMode.Create)) {
-                    files[0].CopyTo(fileStream);
+            if (fileFromForm.Any()) {
+                var extension = Path.GetExtension(fileFromForm[0].FileName);
+                var uploads = Path.Combine(webRoot, "images\\"+itemFromDb.Id+extension);
+                await using (var fileStream = new FileStream(uploads, FileMode.Create)) {
+                    await fileFromForm[0].CopyToAsync(fileStream);
                 }
-                itemFromDb.Image = @"\images\"+itemFromDb.Id+extensions;
+                itemFromDb.Image = @"\images\" + itemFromDb.Id + extension;
             }
             else {
-                var upload = Path.Combine(webRootPath, @"images\"+StaticData.defaultImage);
-                System.IO.File.Copy(upload, webRootPath+@"\images\" + itemFromDb.Id + ".png");
+                var uploads = Path.Combine(webRoot, @"images\" + StaticData.defaultImage);
+                System.IO.File.Copy(uploads,webRoot+@"\images\"+itemFromDb.Id+".png");
                 itemFromDb.Image = @"\images\" + itemFromDb.Id + ".png";
             }
-            await dbContext.SaveChangesAsync();
+            
             return RedirectToAction(nameof(Index));
         }
 
@@ -81,8 +81,8 @@ namespace Spice.Areas.Admin.Controllers {
         public async Task<IActionResult> Edit(int? id) {
             if (id == null)
                 return NotFound();
-            var categories = await dbContext.Categories.ToListAsync();
-            var item = await dbContext.MenuItems.FirstOrDefaultAsync(m => m.Id == id);
+            var categories = await _dbContext.Categories.ToListAsync();
+            var item = await _dbContext.MenuItems.FirstOrDefaultAsync(m => m.Id == id);
             var model = new MenuItemAndCategoriesViewModel() {
                 Item = item,
                 Categories = categories
@@ -94,13 +94,13 @@ namespace Spice.Areas.Admin.Controllers {
         public async Task<IActionResult> Edit(MenuItemAndCategoriesViewModel menuItem) {
 
             if (!ModelState.IsValid) {
-                menuItem.Categories = await dbContext.Categories.ToListAsync();
+                menuItem.Categories = await _dbContext.Categories.ToListAsync();
                 return View(menuItem);
             }
             var files = HttpContext.Request.Form.Files;
 
-            var webRootPath = hostingEnvironment.WebRootPath;
-            var itemFromDb = await dbContext.MenuItems.FindAsync(menuItem.Item.Id);
+            var webRootPath = _hostingEnvironment.WebRootPath;
+            var itemFromDb = await _dbContext.MenuItems.FindAsync(menuItem.Item.Id);
             itemFromDb.ItemName = menuItem.Item.ItemName;
             itemFromDb.CategoryId = menuItem.Item.CategoryId;
             itemFromDb.SubCategoryId = menuItem.Item.SubCategoryId;
@@ -111,14 +111,47 @@ namespace Spice.Areas.Admin.Controllers {
             if (files.Count > 0) {
                 var upload = Path.Combine(webRootPath, "images");
                 var extensions = Path.GetExtension(files[0].FileName);
-                using (var fileStream = new FileStream(Path.Combine(upload, itemFromDb.Id + extensions)
+                await using (var fileStream = new FileStream(Path.Combine(upload, itemFromDb.Id + extensions)
                     , FileMode.Create)) {
-                    files[0].CopyTo(fileStream);
+                    await files[0].CopyToAsync(fileStream);
                 }
                 itemFromDb.Image = @"\images\" + itemFromDb.Id + extensions;
             }
+
+            await _dbContext.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+
+        public async Task<IActionResult> Detail(int? id) {
+            if (id == null)
+                return NotFound();
+            var menuItem = await _dbContext.MenuItems.Include(m => m.SubCategory)
+                .Include(m => m.Category)
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if(menuItem==null) 
+                return NotFound();
             
-            await dbContext.SaveChangesAsync();
+            return View(menuItem);
+        }
+        
+        [HttpGet]
+        public async Task<IActionResult> Delete(int? id) {
+            if (id == null)
+                return NotFound();
+            var menuItem = await _dbContext.MenuItems.Include(m => m.SubCategory)
+                .Include(m => m.Category)
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if(menuItem==null) 
+                return NotFound();
+            
+            return View(menuItem);
+        }
+        
+        [HttpPost]
+        public async Task<IActionResult> Delete(int id) {
+            var itemRemoved = await _dbContext.MenuItems.FindAsync(id);
+            _dbContext.MenuItems.Remove(itemRemoved);
+            await _dbContext.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
     }

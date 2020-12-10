@@ -15,7 +15,7 @@
     </div>
 
     <div>
-        @if (Model.Count() > 0) {
+        @if (Model.Any()) {
             <table class="table table-striped">
                 <tr>
                     <th>
@@ -42,7 +42,7 @@
                 </tr>
                 @foreach (var item in Model) {
             <tr>
-                <td><img src="@item.Image" width="50px" height="50px"/></td>
+                <td><img alt="This is just a alt text" src="@item.Image" width="50px" height="50px"/></td>
                 <td>@item.ItemName</td>
                 <td>@item.description</td>
                 

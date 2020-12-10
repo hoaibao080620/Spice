@@ -3,7 +3,6 @@
     ViewData["Title"] = "Create";
 }
 
-
 <div class="backgroundWhiteBorder">
     <div>
         <form method="post" asp-controller="MenuItems" asp-action="Create" enctype="multipart/form-data">
@@ -96,22 +95,23 @@
 @section Scripts {
     <script>
         function updateSubCategories() {
-            var id = document.getElementById("categorySelect").value;
-            var list = $("#SubCategoryList");
+            let id = document.getElementById("categorySelect").value;
+            let list = $("#SubCategoryList");
+            
             $.ajax({
                 url: "/Admin/SubCategories/GetSubCategoriesExist/" + id,
                 type: "GET",
                 dataType: "text",
                 success: (data) => {
-                    var subCategories = JSON.parse(data);
-                    console.log(subCategories);
+                    let subCategories = JSON.parse(data);
                     list.html("");
-                    for (var item of subCategories) {
+                    for (let item of subCategories) {
                         list.append(`<option value=${item.id}>${item.subCategoryName}</option>`)
                     }
                 }
             })
         }
+
         
 
         $("document").ready(() => {

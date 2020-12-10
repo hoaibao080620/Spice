@@ -10,13 +10,13 @@ using Spice.Models;
 namespace Spice.Areas.Admin.Controllers {
     [Area("Admin")]
     public class CategoriesController : Controller {
-        private readonly ApplicationDbContext dbContext;
-
+        private readonly ApplicationDbContext _dbContext;
+        
         public CategoriesController(ApplicationDbContext dbContext) {
-            this.dbContext = dbContext;
+            this._dbContext = dbContext;
         }
         public async Task<IActionResult> Index() {
-            return View(await dbContext.Categories.ToListAsync());
+            return View(await _dbContext.Categories.ToListAsync());
         }
 
         public IActionResult Create() {
@@ -26,8 +26,8 @@ namespace Spice.Areas.Admin.Controllers {
         [HttpPost]
         public async Task<IActionResult> Create(Category category) {
             if(ModelState.IsValid) {
-                dbContext.Add(category);
-                await dbContext.SaveChangesAsync();
+                _dbContext.Add(category);
+                await _dbContext.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
             return View(category);
@@ -37,7 +37,7 @@ namespace Spice.Areas.Admin.Controllers {
             if (id == null) {
                 return NotFound();
             }
-            var category = await dbContext.Categories.FindAsync(id);
+            var category = await _dbContext.Categories.FindAsync(id);
             if(category == null) {
                 return NotFound();
             }
@@ -47,8 +47,8 @@ namespace Spice.Areas.Admin.Controllers {
         [HttpPost]
         public async Task<IActionResult> Edit(Category category) {
             if(ModelState.IsValid) {
-                dbContext.Categories.Update(category);
-                await dbContext.SaveChangesAsync();
+                _dbContext.Categories.Update(category);
+                await _dbContext.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
             return View();
@@ -58,7 +58,7 @@ namespace Spice.Areas.Admin.Controllers {
             if (id == null) {
                 return NotFound();
             }
-            var category = await dbContext.Categories.FindAsync(id);
+            var category = await _dbContext.Categories.FindAsync(id);
             if (category == null) {
                 return NotFound();
             }
@@ -67,17 +67,17 @@ namespace Spice.Areas.Admin.Controllers {
 
         [HttpPost, ActionName("Delete")]
         public async Task<IActionResult> DeleteConfirm(int? id) {
-            var cateogry = await dbContext.Categories.FindAsync(id);
+            var cateogry = await _dbContext.Categories.FindAsync(id);
             if(cateogry==null) {
                 return View();
             }
-            dbContext.Categories.Remove(cateogry);
-            await dbContext.SaveChangesAsync();
+            _dbContext.Categories.Remove(cateogry);
+            await _dbContext.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         public async Task<IActionResult>Detail(int? id) {
-            var cateogry = await dbContext.Categories.FindAsync(id);
+            var cateogry = await _dbContext.Categories.FindAsync(id);
             if (cateogry == null) {
                 return NotFound();
             }
