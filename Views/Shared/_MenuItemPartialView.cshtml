@@ -1,0 +1,32 @@
+﻿@model IEnumerable<MenuItem>
+
+@if (Model.Any()) {
+    <div class="container border-dark post AllMenuItem mb-3 rounded border border-success @Model.FirstOrDefault()?.Category.Name.Replace(" ", String.Empty)">
+        <h4 class="text-info">@Model.FirstOrDefault()?.Category.Name</h4>
+        @foreach (var item in Model) {
+            <div class="row "
+                 style="margin-bottom: 1rem">
+                <div class="col-3">
+                    <img width="80%" height="100px" src="@item.Image" alt="Alt text">
+                </div>
+                <div class="offset-1 col-8">
+                    <div class="row">
+                        <div class="col-10" style="font-size: 1.2rem">
+                            @item.ItemName
+                            <p style="font-size: 1rem" class="text-success">@item.SubCategory.SubCategoryName</p>
+                        </div>
+                        <div class="col-2 text-danger" style="font-size: 1.5rem">@item.Price$</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-10">
+                            @item.description
+                        </div>
+                        <div class="col-2">
+                            <a class="btn btn-info" asp-action="Detail" asp-route-id="@item.Id">Detail</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

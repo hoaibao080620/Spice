@@ -1,0 +1,71 @@
+﻿@model Coupon
+@{
+    ViewData["Title"] = "Detail";
+}
+
+<h1>Detail</h1>
+@{
+    string imageSrc = "";
+    if (Model.CouponImage != null) {
+        string base64String = Convert.ToBase64String(@Model.CouponImage, 0, @Model.CouponImage.Length);
+        imageSrc = "data:image/jpg;base64," + base64String;
+    }
+}
+
+@if (imageSrc != "") {
+    <div>
+        <p style="text-align: center"><img  width="400px" height="200px" src="@imageSrc" alt="Alt Text"></p>
+    </div>
+}
+<div class="backgroundWhiteBorder">
+    <div class="form-group row">
+        <div class="col-2">
+            <label class="col-form-label">Coupon name</label>
+        </div>
+        <div class="col-7 offset-1">
+            <input type="text" readonly class="form-control" asp-for="@Model.CouponName">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-2">
+            <label class="col-form-label">Coupon Type</label>
+        </div>
+        <div class="col-7 offset-1">
+            <select asp-for="CouponType" class="form-control" 
+                    disabled asp-items="Html.GetEnumSelectList<Coupon.ECouponType>()"></select>
+        </div>
+    </div>
+    
+    <div class="form-group row">
+        <div class="col-2">
+            <label class="col-form-label">Discount</label>
+        </div>
+        <div class="col-7 offset-1">
+            <input readonly type="text" class="form-control" asp-for="@Model.Discount">
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-2">
+            <label class="col-form-label">Minimum Amount</label>
+        </div>
+        <div class="col-7 offset-1">
+            <input readonly type="text" class="form-control" asp-for="@Model.MinimumAmount">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-2">
+            <label class="col-form-label">Is Active</label>
+        </div>
+        <div class="col-7 offset-1">
+            <input onclick="this.checked=!this.checked;" 
+              class="form-control" type="checkbox" @(Model.IsActive ? "checked" : "")/>
+        </div>
+    </div>
+    <div style="margin:0 auto; text-align: center; padding-top : .5rem">
+        <a class="btn btn-primary" asp-action="Edit" asp-route-id=@Model.CouponId>Edit</a>
+        <a class="btn btn-info" asp-action="Index">Back to list</a>
+    </div>
+
+</div>

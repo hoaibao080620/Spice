@@ -1,0 +1,57 @@
+﻿@model Coupon
+@{
+    ViewData["Title"] = "Delete";
+}
+
+<h1 class="text-info">Do you really want to delete ?</h1>
+<form method="post" asp-action="Delete" class="backgroundWhiteBorder">
+    <div class="form-group row">
+            <div class="col-2">
+                <label class="col-form-label">Coupon name</label>
+            </div>
+            <div class="col-7 offset-1">
+                <input type="text" disabled class="form-control" asp-for="@Model.CouponName">
+            </div>
+        </div>
+    
+        <div class="form-group row">
+            <div class="col-2">
+                <label class="col-form-label">Coupon Type</label>
+            </div>
+            <div class="col-7 offset-1">
+                <input disabled type="text" class="form-control" asp-for="@Model.CouponType">
+            </div>
+        </div>
+        
+        <div class="form-group row">
+            <div class="col-2">
+                <label class="col-form-label">Discount</label>
+            </div>
+            <div class="col-7 offset-1">
+                <input disabled type="text" class="form-control" asp-for="@Model.Discount">
+            </div>
+        </div>
+        <div class="form-group row">
+            <div class="col-2">
+                <label class="col-form-label">Minimum Amount</label>
+            </div>
+            <div class="col-7 offset-1">
+                <input  type="text" disabled class="form-control" asp-for="@Model.MinimumAmount">
+            </div>
+        </div>
+    
+    <div class="form-group row">
+        <div class="col-2">
+            <label class="col-form-label">Is Active</label>
+        </div>
+        <div class="col-7 offset-1">
+            <input onclick="this.checked=!this.checked;" 
+                   class="form-control" type="checkbox" @(Model.IsActive ? "checked" : "")/>
+        </div>
+    </div>
+    <div style="margin:0 auto; text-align: center; padding-top : .5rem">
+        <input class="btn btn-danger" type="submit" value="Yes"/>
+        <a class="btn btn-info" asp-action="Index">Back to list</a>
+    </div>
+    
+</form>

@@ -1,0 +1,71 @@
+﻿@model IEnumerable<Coupon>
+@{
+    ViewData["Title"] = "Index";
+}
+
+<br />
+<div class="border backgroundWhiteBorder">
+    <div class="row">
+        <div class="col-6">
+            <h2 class="text-info">Coupon List</h2>
+        </div>
+        <div class="col-6 text-right">
+            <a class="btn btn-info" asp-action="Create">Create Coupon</a>
+        </div>
+    </div>
+
+    <div>
+        @if (Model.Count() > 0) {
+            <table class="table table-striped">
+                <tr>
+                    <th>
+                        Coupon Image
+                    </th>
+                    <th>
+                        Coupon Name
+                    </th>
+                    <th>
+                        Coupon Discount
+                    </th>
+                    <th>
+                        Coupon MinimunAmount
+                    </th>
+                    <th>
+                        Is Active
+                    </th>
+                    <th>
+                        Action
+                    </th>
+                </tr>
+                @foreach (var item in Model) {
+                    <tr >
+                        @{
+                            string imageSrc = "";
+                            if (item.CouponImage != null) {
+                                string base64String = Convert.ToBase64String(item.CouponImage, 0, item.CouponImage.Length);
+                                imageSrc = "data:image/jpg;base64," + base64String;
+                            }
+                        }
+                        @if (imageSrc != "") {
+                            <td><img src="@imageSrc" alt="Alt text" width="50px" height="50px"></td>
+                        }
+                        else {
+                            <td>Not Image</td>
+                        }
+                        <td>@item.CouponName</td>
+                        <td>@item.Discount</td>
+                        <td>@item.MinimumAmount</td>
+                        <td><input onclick="this.checked=!this.checked;" 
+                                   type="checkbox" @(item.IsActive ? "checked" : "")/></td>
+                        <td><partial name="_GroupButtonPartial" model="item.CouponId"/></td>
+                    </tr>
+
+                }
+            </table>
+        }
+        else {
+            <p>Category list is empty</p>
+        }
+    </div>
+</div>
+

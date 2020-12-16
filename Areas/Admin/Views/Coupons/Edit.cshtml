@@ -1,0 +1,74 @@
+﻿@model Spice.Models.Coupon
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<div class="backgroundWhiteBorder row">
+    <div class="col-12">
+        <h1 class="text-center text-danger">Edit Coupon</h1>
+        <form method="post" asp-controller="Coupons" asp-action="Edit" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="CouponId" value="@Model.CouponId"/> 
+            <div class="form-group row">
+                <div class="col-3">
+                    <label class="col-form-label">Coupon Name</label>
+                </div>
+                <div class="col-7">
+                    <input type="text" class="form-control" asp-for="CouponName">
+                </div>
+                <span asp-validation-for="CouponName" class="text-danger"></span>
+            </div>
+
+            <div class="form-group row">
+                <div class="col-3">
+                    <label class="col-form-label">Discount</label>
+                </div>
+                <div class="col-7">
+                    <input type="number" step="any" class="form-control" asp-for="Discount">
+                </div>
+                <span asp-validation-for="Discount" class="text-danger"></span>
+            </div>
+
+            <div class="form-group row">
+                <div class="col-3">
+                    <label class="col-form-label">Minimum Amount</label>
+                </div>
+                <div class="col-7">
+                    <input type="number" step="any" class="form-control" asp-for="MinimumAmount">
+                </div>
+                <span asp-validation-for="MinimumAmount" class="text-danger"></span>
+            </div>
+
+            <div class="form-group row">
+                <div class="col-3">
+                    <label class="col-form-label">Is Active</label>
+                </div>
+                <div class="col-7">
+                    <input type="checkbox" class="form-control form-check-input" asp-for="IsActive">
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <div class="col-3">
+                    <label class="col-form-label">Coupon Type</label>
+                </div>
+                <div class="col-7">
+                    <select class="form-control" asp-for="CouponType" asp-items="Html.GetEnumSelectList<Coupon.ECouponType>()"></select>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <div class="col-3">
+                    <label class="col-form-label">Coupon Image</label>
+                </div>
+                <div class="col-7">
+                    <input type="file" name="files" class="form-control" id="coupon_image"/>
+                </div>
+            </div>
+            <div style="margin:0 auto; text-align: center; padding-top : .5rem">
+                <button type="submit" class="btn btn-primary">Edit</button>
+                <a class="btn btn-info" asp-action="Index">Back to list</a>
+            </div>
+        </form>
+    </div>
+</div>
