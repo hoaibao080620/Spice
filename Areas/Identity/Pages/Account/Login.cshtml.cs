@@ -6,11 +6,15 @@ using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Spice.Data;
+using Spice.Utilities;
 
 namespace Spice.Areas.Identity.Pages.Account
 {
@@ -18,14 +22,17 @@ namespace Spice.Areas.Identity.Pages.Account
     public class LoginModel : PageModel
     {
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly ApplicationDbContext _dbContext;
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly ILogger<LoginModel> _logger;
 
         public LoginModel(SignInManager<IdentityUser> signInManager, 
             ILogger<LoginModel> logger,
-            UserManager<IdentityUser> userManager)
+            UserManager<IdentityUser> userManager,
+            ApplicationDbContext dbContext)
         {
             _userManager = userManager;
+            _dbContext = dbContext;
             _signInManager = signInManager;
             _logger = logger;
         }
@@ -74,14 +81,18 @@ namespace Spice.Areas.Identity.Pages.Account
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
             returnUrl = returnUrl ?? Url.Content("~/");
-
             if (ModelState.IsValid)
             {
                 // This doesn't count login failures towards account lockout
                 // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-                var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
-                if (result.Succeeded)
-                {
+                var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: true);
+                if (result.Succeeded) {
+                    var user = await _dbContext.ApplicationUser
+                        .FirstOrDefaultAsync(s => s.Email == Input.Email);
+
+                    var cartCount = await _dbContext.ShoppingCarts
+                        .Where(s => s.UserId == user.Id).CountAsync();
+                    HttpContext.Session.SetInt32(StaticData.CartCount,cartCount);
                     _logger.LogInformation("User logged in.");
                     return LocalRedirect(returnUrl);
                 }

@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +13,7 @@ using Spice.Utilities;
 
 namespace Spice.Areas.Admin.Controllers {
     [Area("Admin")]
+    [Authorize(Roles = UserRole.Manager)]
     public class MenuItemsController : Controller {
         private readonly ApplicationDbContext _dbContext;
         private readonly IWebHostEnvironment _hostingEnvironment;
@@ -46,7 +48,6 @@ namespace Spice.Areas.Admin.Controllers {
 
         [HttpPost]
         public async Task<IActionResult> Create(MenuItemAndCategoriesViewModel menuItem) {
-            
             if(!ModelState.IsValid) {
                 menuItem.Categories = await _dbContext.Categories.ToListAsync();
                 return View(menuItem);

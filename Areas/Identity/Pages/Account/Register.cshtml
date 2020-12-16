@@ -1,4 +1,5 @@
 ﻿@page
+@using Spice.Utilities
 @model RegisterModel
 @{
     ViewData["Title"] = "Register";
@@ -7,36 +8,94 @@
 <h1>@ViewData["Title"]</h1>
 
 <div class="row">
-    <div class="col-md-4">
+    <div class="col-md-6">
         <form asp-route-returnUrl="@Model.ReturnUrl" method="post">
             <h4>Create a new account.</h4>
-            <hr />
-            <div asp-validation-summary="All" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Input.Email"></label>
-                <input asp-for="Input.Email" class="form-control" />
+            <hr/>
+            @* <div asp-validation-summary="All" class="text-danger"></div> *@
+            <partial name="_StatusMessage" model="@TempData["TempMessage"]"/>
+            <div class="form-group row">
+                <div class="col-3 ">
+                    <label asp-for="Input.Name" class="col-form-label"></label>
+                </div>
+                <div class="col-9">
+                    <input asp-for="Input.Name" class="form-control"/>
+                </div>
+                <span asp-validation-for="Input.Name" class="text-danger"></span>
+            </div>
+            <div class="form-group row">
+                <div class="col-3">
+                    <label asp-for="Input.Email" class="col-form-label"></label>
+                </div>
+                <div class="col-9">
+                    <input asp-for="Input.Email" class="form-control"/>
+                </div>
                 <span asp-validation-for="Input.Email" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="Input.Password"></label>
-                <input asp-for="Input.Password" class="form-control" />
+
+            <div class="form-group row">
+                <div class="col-3 ">
+                    <label asp-for="Input.Address" class="col-form-label"></label>
+                </div>
+                <div class="col-9">
+                    <input asp-for="Input.Address" class="form-control"/>
+                </div>
+                <span asp-validation-for="Input.Address" class="text-danger"></span>
+            </div>
+            <div class="form-group row">
+                <div class="col-3 ">
+                    <label asp-for="Input.PhoneNumber" class="col-form-label"></label>
+                </div>
+                <div class="col-9">
+                    <input asp-for="Input.PhoneNumber" class="form-control"/>
+                </div>
+                <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
+            </div>
+            <div class="form-group row">
+                <div class="col-3 ">
+                    <label asp-for="Input.Password" class="col-form-label"></label>
+                </div>
+                <div class="col-9">
+                    <input asp-for="Input.Password" class="form-control"/>
+                </div>
                 <span asp-validation-for="Input.Password" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="Input.ConfirmPassword"></label>
-                <input asp-for="Input.ConfirmPassword" class="form-control" />
+            <div class="form-group row">
+                <div class="col-3">
+                    <label asp-for="Input.ConfirmPassword" class="col-form-label"></label>
+                </div>
+                <div class="col-9">
+                    <input asp-for="Input.ConfirmPassword" class="form-control"/>
+                </div>
                 <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
             </div>
-            <button type="submit" class="btn btn-primary">Register</button>
+            @if (User.IsInRole(UserRole.Manager)) {
+                <div class="form-group row">
+                    <div class="col-3">
+                        <label class="col-form-label">Role</label>
+                    </div>
+                    <div class="col-9">
+                        <input name="role" type="radio" value="@UserRole.Kitchen" checked/>@UserRole.Kitchen
+                        <input name="role" type="radio" value="@UserRole.Manager"/>@UserRole.Manager
+                        <input name="role" type="radio" value="@UserRole.FrontDesk"/>@UserRole.FrontDesk
+                    </div>
+                </div>
+            }
+            <div class="form-group row">
+                <div class="col-3"></div>
+                <div class="col-9">
+                    <button type="submit" class="btn btn-primary form-control">Register</button>
+                </div>
+            </div>
+            
         </form>
     </div>
-    <div class="col-md-6 col-md-offset-2">
+    <div class="col-md-4 col-md-offset-2">
         <section>
             <h4>Use another service to register.</h4>
-            <hr />
+            <hr/>
             @{
-                if ((Model.ExternalLogins?.Count ?? 0) == 0)
-                {
+                if ((Model.ExternalLogins?.Count ?? 0) == 0) {
                     <div>
                         <p>
                             There are no external authentication services configured. See <a href="https://go.microsoft.com/fwlink/?LinkID=532715">this article</a>
@@ -44,13 +103,11 @@
                         </p>
                     </div>
                 }
-                else
-                {
+                else {
                     <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="form-horizontal">
                         <div>
                             <p>
-                                @foreach (var provider in Model.ExternalLogins)
-                                {
+                                @foreach (var provider in Model.ExternalLogins) {
                                     <button type="submit" class="btn btn-primary" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">@provider.DisplayName</button>
                                 }
                             </p>
@@ -63,5 +120,5 @@
 </div>
 
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+    <partial name="_ValidationScriptsPartial"/>
 }

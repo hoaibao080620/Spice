@@ -1,4 +1,7 @@
-﻿<!DOCTYPE html>
+﻿@using Spice.Utilities
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -20,21 +23,40 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
                     <partial name="_LoginPartial" />
                     <ul class="navbar-nav flex-grow-1">
-                        <li class="dropdown">
-                            <button class="btn btn-light dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                Content Management
-                            </button>
-                            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                <a class="dropdown-item" asp-area="Admin" asp-controller="Categories"
-                                   asp-action="Index">Category</a>
-                                <a class="dropdown-item" asp-area="Admin" asp-controller="SubCategories"
-                                   asp-action="Index">Sub Category</a>
-                                <a class="dropdown-item" asp-area="Admin" asp-controller="MenuItems"
-                                   asp-action="Index">Menu Item</a>
-                                <a class="dropdown-item" asp-area="Admin" asp-controller="Coupons"
-                                                                   asp-action="Index">Coupon</a>
-                            </div>
-                        </li>
+                        @if (User.IsInRole(UserRole.Manager)) {
+                            <li class="dropdown">
+                                <button class="btn btn-light dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    Content Management
+                                </button>
+                                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                    <a class="dropdown-item" asp-area="Admin" asp-controller="Categories"
+                                       asp-action="Index">Category</a>
+                                    <a class="dropdown-item" asp-area="Admin" asp-controller="SubCategories"
+                                       asp-action="Index">Sub Category</a>
+                                    <a class="dropdown-item" asp-area="Admin" asp-controller="MenuItems"
+                                       asp-action="Index">Menu Item</a>
+                                    <a class="dropdown-item" asp-area="Admin" asp-controller="Coupons"
+                                       asp-action="Index">Coupon</a>
+                                    <a class="dropdown-item" asp-area="Admin" asp-controller="User"
+                                       asp-action="Index">User</a>
+
+                                </div>
+                            </li>
+                            
+                        }
+                        @if (HttpContextAccessor.HttpContext.Session.GetInt32(StaticData.CartCount) != null) {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" href="#">
+                                    <i class="fas fa-cart-plus"></i> 
+                                    (@HttpContextAccessor.HttpContext.Session.GetInt32(StaticData.CartCount))
+                                </a>
+                            </li>
+                        }
+                        else {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" href="#"><i class="fas fa-cart-plus"></i> (0)</a>
+                            </li>
+                        }
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
