@@ -1,0 +1,17 @@
+﻿
+@{
+    ViewBag.Title = "title";
+    Layout = "_Layout";
+}
+
+<div class="jumbotron text-center">
+    <h1 class="display-3">Thank You! Your email has been confirm</h1>
+    <hr>
+    <p class="lead">
+        <a class="btn btn-primary btn-sm" asp-area="Customer" asp-controller="Home"
+                                                     asp-action="Index" role="button">Continue to homepage</a>
+        <a class="btn btn-danger btn-sm" asp-area="Customer" asp-controller="Email"
+           asp-action="EmailConfirmSuccess" role="button">Login</a>
+    </p>
+
+</div>

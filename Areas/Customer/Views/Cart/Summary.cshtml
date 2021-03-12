@@ -1,0 +1,405 @@
+﻿@model ShoppingCartDetailViewModel
+@using Microsoft.Extensions.Options
+@using Spice.Utilities
+@inject IOptions<StripeSetting> Stripe
+
+@{
+    ViewBag.Title = "Summary Shopping Cart";
+    Layout = "_Layout";
+}
+<style>
+    body {
+        background: linear-gradient(110deg, #BBDEFB 60%, #42A5F5 60%)
+    }
+    
+    .shop {
+        font-size: 10px
+    }
+    
+    .space {
+        letter-spacing: 0.8px !important
+    }
+    
+    .second a:hover {
+        color: rgb(92, 92, 92)
+    }
+    
+    .active-2 {
+        color: rgb(92, 92, 92)
+    }
+    
+    .breadcrumb>li+li:before {
+        content: "" !important
+    }
+    
+    .breadcrumb {
+        padding: 0px;
+        font-size: 10px;
+        color: #aaa !important
+    }
+    
+    .first {
+        background-color: white
+    }
+    
+    a {
+        text-decoration: none !important;
+        color: #aaa
+    }
+    
+    .btn-lg,
+    .form-control-sm:focus,
+    .form-control-sm:active,
+    a:focus,
+    a:active {
+        outline: none !important;
+        box-shadow: none !important
+    }
+    
+    .form-control-sm:focus {
+        border: 1.5px solid #4bb8a9
+    }
+    
+    .btn-group-lg>.btn,
+    .btn-lg {
+        padding: .5rem 0.1rem;
+        font-size: 1rem;
+        color: white !important;
+        background-color: #4bb8a9;
+        height: 2.8rem !important;
+        border-radius: 0.2rem !important
+    }
+    
+    .btn-group-lg>.btn:hover,
+    .btn-lg:hover {
+        background-color: #26A69A
+    }
+    
+    .btn-outline-primary {
+        background-color: #fff !important;
+        color: #4bb8a9 !important;
+        border-radius: 0.2rem !important;
+        border: 1px solid #4bb8a9
+    }
+    
+    .btn-outline-primary:hover {
+        background-color: #4bb8a9 !important;
+        color: #fff !important;
+        border: 1px solid #4bb8a9
+    }
+    
+    .card-2 {
+        margin-top: 40px !important
+    }
+    
+    .card-header {
+        background-color: #fff;
+        border-bottom: 0 solid #aaaa !important
+    }
+    
+    p {
+        font-size: 13px
+    }
+    
+    .small {
+        font-size: 9px !important
+    }
+    
+    .form-control-sm {
+        height: calc(2.2em + .5rem + 2px);
+        font-size: .875rem;
+        line-height: 1.5;
+        border-radius: 0
+    }
+    
+    .cursor-pointer {
+        cursor: pointer
+    }
+    
+    .boxed {
+        padding: 0 8px 0 8px;
+        background-color: #4bb8a9;
+        color: white
+    }
+    
+    .boxed-1 {
+        padding: 0 8px 0 8px;
+        color: black !important;
+        border: 1px solid #aaaa
+    }
+    
+    .bell {
+        opacity: 0.5;
+        cursor: pointer
+    }
+    
+</style>
+<div class=" container-fluid my-5 ">
+    <div class="row justify-content-center ">
+        <div class="col-xl-10">
+            <div class="card shadow-lg ">
+                <div class="row justify-content-around">
+                    <div class="col-md-5">
+                        <div class="card border-0">
+                            <div class="card-header pb-0">
+                                <h2 class="card-title space ">Checkout</h2>
+                                <h3 class="card-text text-muted mt-4 space">SHIPPING DETAILS</h3>
+                            </div>
+                            <form id="payment_form" autocomplete="off" class="card-body" method="post">
+                                <div class="row mt-4">
+                                    <div class="col">
+                                        <p class="text-muted mb-2">PAYMENT DETAILS</p>
+                                        <hr class="mt-0">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="NAME" class="small text-muted mb-1">Pickup Name</label>
+                                    <input type="text" class="form-control form-control-sm"
+                                           asp-for="OrderHeader.PickupName" id="txtName" aria-describedby="helpId" placeholder="BBBootstrap Team">
+                                </div>
+                                <div class="form-group">
+                                    <label for="NAME" class="small text-muted mb-1">Pickup Phone</label>
+                                    <input type="text" class="form-control form-control-sm"
+                                           asp-for="OrderHeader.PhoneNumber" id="txtPhone" 
+                                           aria-describedby="helpId" placeholder="4534 5555 5555 5555">
+                                </div>
+                                <div class="row no-gutters">
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label for="NAME" class="small text-muted mb-1">Date</label>
+                                            <input type="text" class="form-control form-control-sm"
+                                                   asp-for="OrderHeader.PickupDate" id="datepicker" value=""
+                                                   aria-describedby="helpId">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6 pr-sm-2">
+                                        <div class="form-group">
+                                            <label for="NAME" class="small text-muted mb-1">Time</label>
+                                            <input type="text" class="form-control form-control-sm" value=""
+                                                   asp-for="OrderHeader.PickupTime"
+                                                   id="timepicker" aria-describedby="helpId">
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div class="form-group">
+                                    <label for="NAME" class="small text-muted mb-1">Additional Comment (Optional)</label>
+                                    <textarea style="height: 100px" type="text" class="form-control form-control-sm" 
+                                           asp-for="OrderHeader.Comments" id="NAME" aria-describedby="helpId" placeholder="4534 5555 5555 5555"></textarea>
+                                </div>
+                                <h4 style="text-align: center">Payment with</h4>
+                                <div class="row mb-md-5">
+                                    
+                                    <div class="col-6">
+                                        <button style="width: 100%!important;" asp-controller="Payment" asp-action="Payment" type="submit"
+                                                onclick="return validateInput()" class="btn 
+                                         btn-primary"><i style="font-size: 2rem;" class="fab fa-stripe"></i></button>
+                                    </div>
+
+                                    <div class="col-6">
+                                        <!-- PayPal Logo -->
+                                        
+                                        <button style="width: 100%!important;"
+                                                onclick="return validateInput()" type="submit" class="btn btn-dark "
+                                                id="paypal_Payment"
+                                                asp-controller="Payment" asp-area="Customer" asp-action="PayPalPayment">
+                                            <i class="fab fa-paypal" style="font-size: 2rem"></i>
+                                            <span style="margin-bottom: 0.5rem">Paypal</span>
+                                        </button>
+                                    </div>
+
+                                </div>
+                                
+                                <input type="hidden" asp-for="OrderHeader.TotalOriginal" 
+                                       value="@(Model.OrderHeader.TotalFinal+Model.OrderHeader.CouponCodeDiscount)">
+                                <input type="hidden" asp-for="OrderHeader.TotalFinal"
+                                       value="@(Model.OrderHeader.TotalFinal)">
+                                <input type="hidden" asp-for="OrderHeader.CouponCodeDiscount"
+                                       value="@(Model.OrderHeader.CouponCodeDiscount)">
+                                
+                            </form> 
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="card border-0 ">
+                            <div class="card-header card-2">
+                                <p class="card-text text-muted mt-md-4 mb-2 space">
+                                    YOUR ORDER
+                                    <span class=" small text-muted ml-2 cursor-pointer">
+                                        <a class="btn btn-outline-success" asp-controller="Home"
+                                           asp-area="Customer" asp-action="Index">
+                                            Continue Shopping
+                                        </a>
+                                    </span>
+                                </p>
+                                <hr class="my-2">
+                            </div>
+                            <div class="card-body pt-0">
+                                @foreach (var cart in Model.Carts) {
+                                    <div class="row justify-content-between">
+                                        <div class="col-8">
+                                            <div class="media flex-column flex-sm-row">
+                                                <img alt="Alt text" class="img-fluid" src="@cart.MenuItem.Image" width="62" height="62">
+                                                <div class="media-body my-auto">
+                                                    <div class="row ">
+                                                        <div class="ml-2 col-auto">
+                                                            <p class="mb-0">
+                                                                <b>@cart.MenuItem.ItemName</b>
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex-sm-col col-2 my-auto">
+                                            <p style="color:green;padding:0.2rem;text-align:center;border: 1px solid black;">
+                                                @cart.Count
+                                            </p>
+                                        </div>
+                                        <div class="flex-sm-col col-2 my-auto ">
+                                            <p>
+                                                <b>$@cart.MenuItem.Price</b>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <hr class="my-2">
+                                }
+
+                                <div class="row ">
+                                    <div class="col">
+
+                                        <div class="row justify-content-between">
+                                            <div class="col-6">
+                                                <p>
+                                                    <b style="font-size: 1.2rem">Coupon Code</b>
+                                                </p>
+                                            </div>
+                                            <div class="flex-sm-col col-auto">
+                                                <p style="font-size: 1.2rem;" class="mb-1">
+                                                    <b>
+                                                        @(string.IsNullOrEmpty(Model.OrderHeader.CouponCode) ? "None" :
+                                                            Model.OrderHeader.CouponCode)
+                                                    </b>
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="row justify-content-between">
+                                            <div class="col-4">
+                                                <p>
+                                                    <b style="font-size: 1.2rem">Discount</b>
+                                                </p>
+                                            </div>
+                                            <div class="flex-sm-col col-auto">
+                                                <p style="font-size: 1.2rem;" class="mb-1">
+                                                    <b>-$@(Model.OrderHeader.CouponCodeDiscount)</b>
+                                                </p>
+                                            </div>
+                                        </div>
+
+
+                                        <div class="row justify-content-between">
+                                            <div class="col-4">
+                                                <p>
+                                                    <b style="font-size: 1.2rem">Total</b>
+                                                </p>
+                                            </div>
+                                            <div class="flex-sm-col col-auto">
+                                                <p class="mb-1" style="font-size: 1.2rem; color: red">
+                                                    <b>$@Model.OrderHeader.TotalFinal</b>
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <hr class="my-0">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+    <script>
+    
+        
+        $(function () {
+            $('#datepicker').datepicker({ minDate: 0, maxDate: '+1W' });
+            $('#timepicker').timepicker({minTime : '11:00 AM', maxTime : '9:00 PM',step: '30'});
+        });
+        
+        function setPickUpTime() {
+            let dateSelected = document.getElementById("datepicker").value;
+            let dt = new Date(dateSelected);
+            let today = new Date();
+
+            dt.setHours(0, 0, 0, 0);
+            let selectedTime;
+            if (dt > today) {
+                selectedTime = '11:00am';
+            } else {
+                selectedTime = getTimeFromCurrentDate();
+            }
+
+            $('#timepicker').timepicker('option', 'minTime', selectedTime);
+
+        }
+
+
+        function getTimeFromCurrentDate() {
+            let curDt = new Date();
+
+            let minTime = "";
+            if (curDt.getHours() < 11) {
+                minTime = '12:00pm';
+            }
+            else {
+                if (curDt.getMinutes() < 30) {
+                    minTime = (curDt.getHours() + 1).toString() + ':30pm'
+                }
+                else {
+                    minTime = (curDt.getHours() + 2).toString() + ':00pm'
+                }
+            }
+            return minTime;
+        }
+
+        $('#datepicker').change(function () {
+            setPickUpTime();
+        });
+
+
+        function validateInput() {
+            let time = document.getElementById("timepicker").value;
+            let dt = document.getElementById("datepicker").value;
+            let name = document.getElementById("txtName").value;
+            let phone = document.getElementById("txtPhone").value;
+
+            if (dt.toString().length === 0) {
+                alert("Please select pickup date")
+                return false;
+            }
+            else if (time.toString().length === 0) {
+                alert("Please select pickup time")
+                return false;
+            }
+            else if (name.toString().length === 0) {
+                alert("Please enter pickup name")
+                return false;
+            }
+            else if (phone.toString().length === 0) {
+                alert("Please enter a phone number")
+                return false;
+            }
+            else {
+                return true;
+            }
+        }
+        
+        
+        
+    </script>
+}

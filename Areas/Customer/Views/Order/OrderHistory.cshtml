@@ -1,0 +1,214 @@
+﻿@using Spice.Utilities
+@model Spice.Utilities.PagedList<Spice.Models.ViewModels.DetailAndOrderHeaderViewModel>
+@{
+    ViewData["Title"] = "Order History";
+}
+<style>
+    
+    .modal-dialog {
+        max-width: 950px;
+    }
+    
+    .modal-body {
+        padding: unset;
+    }
+</style>
+<br />
+<div class="border backgroundWhiteBorder">
+    <div class="row">
+        <div class="col-6">
+            <h2 class="text-info">Order History</h2>
+        </div>
+        <div class="col-6">
+            <div class="dropdown" style="text-align: right">
+                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Order By
+                </button>
+                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                    <a class="dropdown-item" asp-controller="Order"
+                       asp-action="OrderHistory" asp-route-orderBy="TotalFinal desc">Total</a>
+                    <a asp-controller="Order" asp-action="OrderHistory" 
+                       asp-route-orderBy="Id desc" class="dropdown-item">Id</a>
+                    <a asp-controller="Order" asp-action="OrderHistory" 
+                        asp-route-orderBy="PickupTime" class="dropdown-item">Pickup Time</a>
+                </div>
+            </div>
+            
+        </div>
+        
+        @* <div class="col-6 text-right"> *@
+        @*     <a class="btn btn-info" asp-action="Create">Create Category</a> *@
+        @* </div> *@
+    </div>
+
+    <div>
+        @if (Model.Count() > 0) {
+            <table class="table table-striped">
+                <tr>
+                    <th>
+                        Id
+                    </th>
+                    <th>
+                        Pickup Name
+                    </th>
+                    <th>
+                        Email
+                    </th>
+                    <th>
+                        Pickup Time
+                    </th>
+                    <th>
+                        Total
+                    </th>
+                    <th>
+                        Total items
+                    </th>
+                    <th>
+                        
+                    </th>
+                    <th></th>
+                </tr>
+                @foreach (var item in Model) {
+                    <tr >
+                        <td >@item.OrderHeader.Id</td>
+                        <td >@item.OrderHeader.PickupName</td>
+                        <td >@item.OrderHeader.ApplicationUser.Email</td>
+                        <td >@item.OrderHeader.PickupTime</td>
+                        @* <td >$@item.OrderHeader.TotalFinal</td> *@
+                        <td >@(string.Format($"{item.OrderHeader.TotalFinal:C2}"))</td>
+                        <td >@item.OrderDetails.Count</td>
+                        <td>
+                            <a onclick="getOrderDetail(@item.OrderHeader.Id)"
+                               style="cursor: pointer" class="btn btn-success">
+                                Detail
+                            </a>
+                            @if (item.OrderHeader.Status == OrderStatus.StatusCancelled) {
+                                <a type="button" class="btn btn-primary">Status</a>
+                            }
+                            else {
+                                <a onclick="getOrderStatus(@item.OrderHeader.Id)"
+                                   style="cursor: pointer; color: white" class="btn btn-primary">
+                                    Status
+                                </a>
+                            }
+                        </td>
+                        
+                        
+                    </tr>
+
+                }
+            </table>
+            if (Model.TotalPages > 1) {
+                <nav style="width: 200px; margin: 0 auto" aria-label="Page navigation example">
+                    <ul class="pagination" >
+                        
+                        @for (var i = 1; i <= Model.TotalPages; i++) {
+                            var routeData = new Dictionary<string, string>() {
+                                {"pageNum", i.ToString()},
+                                {"pageSize", Model.PageSize.ToString()}
+                            };
+                            if (i == Model.CurrentPage) {
+                                <li class="page-item active">
+                                    <a class="page-link"
+                                       asp-controller="Order"
+                                       asp-action="OrderHistory"
+                                       asp-all-route-data="routeData">@i
+                                    </a>
+                                </li>
+                            }
+                            else {
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       asp-controller="Order"
+                                       asp-action="OrderHistory"
+                                       asp-all-route-data="routeData">@i
+                                    </a>
+                                </li>
+                            }
+
+                        }
+
+                    </ul>
+                </nav>
+            }
+            
+        }
+        else {
+            <p>Category list is empty</p>
+        }
+    </div>
+</div>
+
+
+
+<div id="myModal" class="modal fade" role="dialog">
+    <div class="modal-dialog content-modal">
+        <input type="hidden" id="user_id" name="id">
+        
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Order Detail</h4>
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+            </div>
+            <div class="modal-body" id="detail-content">
+                
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="myModal1" class="modal fade" role="dialog">
+    <div class="modal-dialog content-modal">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Order Status</h4>
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+            </div>
+            <div class="modal-body" id="detail-content1">
+                
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function getOrderStatus(id) {
+            let xht = new XMLHttpRequest();
+            $('#myModal1').modal('show');
+            let content = $('#detail-content1');
+            xht.onreadystatechange = function () {
+                if (xht.readyState === 4) {
+                    if (xht.status === 200) {
+                        content.html('');
+                        content.html(xht.responseText);
+                    }
+                }
+            }
+            
+            xht.open('get',`/Customer/Order/GetOrderStatus/${id}`,true);
+            xht.send();                                     
+        }
+    
+        function getOrderDetail(id) {
+            let xht = new XMLHttpRequest();
+            $('#myModal').modal('show');
+            let content = $('#detail-content');
+            xht.onreadystatechange = function () {
+                if (xht.readyState === 4) {
+                    if (xht.status === 200) {
+                        content.html('');
+                        content.html(xht.responseText);
+                    }
+                }
+            }
+            
+            xht.open('get',`/Customer/Order/GetOrderHistory/${id}`,true);
+            xht.send();
+        }
+    </script>
+}

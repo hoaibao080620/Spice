@@ -1,0 +1,155 @@
+﻿@model Spice.Models.ViewModels.DetailAndOrderHeaderViewModel
+
+@{
+    ViewBag.Title = "title";
+    Layout = "_Layout";
+}
+
+<style> 
+    body {
+        background-color: #ffe8d2;
+        font-family: 'Montserrat', sans-serif
+    }
+    
+    .card {
+        border: none
+    }
+    
+    .logo {
+        background-color: #eeeeeea8
+    }
+    
+    .totals tr td {
+        font-size: 13px
+    }
+    
+    .footer {
+        background-color: #eeeeeea8
+    }
+    
+    .footer span {
+        font-size: 12px
+    }
+    
+    .product-qty span {
+        font-size: 12px;
+        color: #dedbdb
+    }
+</style>
+
+@if (Model.OrderHeader is null) {
+    <partial name="_PageNotFoundPartialView"/>
+}
+else {
+    <div class="container mt-5 mb-5">
+    <div class="row d-flex justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="invoice p-5">
+                    <h5>Your order Confirmed!</h5> <span class="font-weight-bold d-block mt-4">Hello, @Model.OrderHeader.ApplicationUser.Name</span> 
+                    <span>You order has been confirmed!</span>
+                    <div class="payment border-top mt-3 mb-3 border-bottom table-responsive">
+                        <table class="table table-borderless">
+                            <tbody>
+                            <tr>
+                                <td>
+                                    <div class="py-2"> <span class="d-block text-muted">Order Date</span><span>@Model.OrderHeader.PickupDate</span></div>
+                                </td>
+                                <td>
+                                    <div class="py-2"> <span class="d-block text-muted">Order No</span><span>@Model.OrderHeader.Id</span> </div>
+                                </td>
+                                <td>
+                                    <div class="py-2"> <span class="d-block text-muted">Payment</span><span><img src="https://img.icons8.com/color/48/000000/mastercard.png" width="20" /></span> </div>
+                                </td>
+                                <td>
+                                    <div class="py-2"> <span class="d-block text-muted">Pickup Name</span><span>@Model.OrderHeader.PickupName</span></div>
+                                </td>
+                                    
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="py-2"> <span class="d-block text-muted">Phone Number</span><span>@Model.OrderHeader.PhoneNumber</span> </div>
+                                </td>
+                                <td>
+                                    <div class="py-2"> <span class="d-block text-muted">Email</span><span>@Model.OrderHeader.ApplicationUser.Email</span> </div>
+                                </td>
+                                <td>
+                                    <div class="py-2"> <span class="d-block text-muted">Order Time</span> <span>@Model.OrderHeader.PickupTime</span> </div>
+                                </td>
+                                <td>
+                                    <div class="py-2"> <span class="d-block text-muted">Code</span><span>@(Model.OrderHeader.CouponCode ?? "None")</span></div>
+                                </td>
+                                                                
+                            </tr>
+                            
+                            
+                            </tbody>
+                        </table>
+                        <div>
+                            <p class="text-info">Comment</p>
+                            <textarea readonly style="width:100%">@Model.OrderHeader.Comments</textarea>
+                        </div>
+                        
+                    </div>
+                    <div class="product border-bottom table-responsive">
+                        <table class="table table-borderless">
+                            <tbody>
+                                @foreach (var item in Model.OrderDetails) {
+                                    <tr>
+                                        <td width="20%"> <img src="@item.MenuItem.Image" width="90"> </td>
+                                        <td width="60%"> <span class="font-weight-bold">@item.Name</span>
+                                            <div class="product-qty"> <span class="d-block">Quantity:@item.Count</span><span>@item.Description</span> </div>
+                                        </td>
+                                        <td width="20%">
+                                            <div class="text-right"> <span class="font-weight-bold">$@item.Price</span> </div>
+                                        </td>
+                                    </tr> 
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="row d-flex justify-content-end">
+                        <div class="col-md-5" style="display: flex;align-items: center">
+                            <div style="">
+                                <button disabled  class="btn btn-success">@Model.OrderHeader.Status</button>
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <table class="table table-borderless">
+                                <tbody class="totals">
+                                <tr>
+                                    <td>
+                                        <div class="text-left"> <span class="text-muted">Total</span> </div>
+                                    </td>
+                                    <td>
+                                        <div class="text-right"> <span>$@Model.OrderHeader.TotalOriginal</span> </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="text-left"> <span class="text-muted">Discount</span> </div>
+                                    </td>
+                                    <td>
+                                        <div class="text-right"> <span class="text-success">@(Model.OrderHeader.CouponCodeDiscount == 0 ? "None": $"${Model.OrderHeader.CouponCodeDiscount}")</span> </div>
+                                    </td>
+                                </tr>
+                                <tr class="border-top border-bottom">
+                                    <td>
+                                        <div class="text-left"> <span class="font-weight-bold">Total</span> </div>
+                                    </td>
+                                    <td>
+                                        <div class="text-right"> <span class="font-weight-bold">$@Model.OrderHeader.TotalFinal</span> </div>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <p>We will be sending shipping confirmation email when the item shipped successfully!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+}

@@ -1,0 +1,196 @@
+﻿@model Spice.Models.ViewModels.DetailAndOrderHeaderViewModel
+@using Microsoft.Extensions.Options
+@using Spice.Utilities
+@inject IOptions<StripeSetting> Stripe
+
+@{
+    ViewBag.Title = "Summary Shopping Cart";
+}
+<style>
+   
+    .space {
+        letter-spacing: 0.8px !important
+    }
+    
+    .second a:hover {
+        color: rgb(92, 92, 92)
+    }
+    
+    .breadcrumb>li+li:before {
+        content: "" !important
+    }
+    
+    a {
+        text-decoration: none !important;
+        color: #aaa
+    }
+    
+    .btn-lg,
+    .form-control-sm:focus,
+    .form-control-sm:active,
+    a:focus,
+    a:active {
+        outline: none !important;
+        box-shadow: none !important
+    }
+    
+    .form-control-sm:focus {
+        border: 1.5px solid #4bb8a9
+    }
+    
+    .btn-group-lg>.btn,
+    .btn-lg {
+        padding: .5rem 0.1rem;
+        font-size: 1rem;
+        color: white !important;
+        background-color: #4bb8a9;
+        height: 2.8rem !important;
+        border-radius: 0.2rem !important
+    }
+    
+    .btn-group-lg>.btn:hover,
+    .btn-lg:hover {
+        background-color: #26A69A
+    }
+    
+    .card-2 {
+        margin-top: 40px !important
+    }
+    
+    .card-header {
+        background-color: #fff;
+        border-bottom: 0 solid #aaaa !important
+    }
+    
+    p {
+        font-size: 13px
+    }
+    
+    .small {
+        font-size: 9px !important
+    }
+    
+    .form-control-sm {
+        height: calc(2.2em + .5rem + 2px);
+        font-size: .875rem;
+        line-height: 1.5;
+        border-radius: 0
+    }
+    .input-readonly {
+        background-color: white!important;
+    }
+
+    
+</style>
+<div class=" container-fluid my-5 ">
+    <div class="row justify-content-center ">
+        <div class="col-xl-10">
+            <div class="card shadow-lg ">
+                <div class="row justify-content-around">
+                    <div class="col-md-5">
+                        <div class="card border-0">
+                            
+                            
+                            <div class="card-body" >
+                                <div class="row mt-4">
+                                    <div class="col">
+                                        <p class="text-muted mb-2">ORDER DETAILS</p>
+                                        <hr class="mt-0">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="NAME" class="small text-muted mb-1">Pickup Name</label>
+                                    <input readonly type="text" class="form-control form-control-sm input-readonly"
+                                           asp-for="OrderHeader.PickupName" id="txtName" aria-describedby="helpId" placeholder="BBBootstrap Team">
+                                </div>
+                                <div class="form-group">
+                                    <label for="NAME" class="small text-muted mb-1">Pickup Phone</label>
+                                    <input readonly type="text" class="form-control form-control-sm input-readonly"
+                                           asp-for="OrderHeader.PhoneNumber" id="txtPhone" 
+                                           aria-describedby="helpId" placeholder="4534 5555 5555 5555">
+                                </div>
+
+
+                                <div class="form-group">
+                                    <label for="NAME" class="small text-muted mb-1">Time</label>
+                                    <input readonly  type="text" class="form-control form-control-sm input-readonly" 
+                                           asp-for="OrderHeader.PickupTime"
+                                           id="timepicker" aria-describedby="helpId">
+                                </div>
+                                    
+
+                                
+                                <div class="form-group">
+                                    <label for="NAME" class="small text-muted mb-1">Additional Comment (Optional)</label>
+                                    <textarea readonly style="height: 100px" type="text" class="form-control form-control-sm input-readonly" 
+                                           asp-for="OrderHeader.Comments" id="NAME" aria-describedby="helpId" placeholder="4534 5555 5555 5555"></textarea>
+                                </div>
+                                
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0 ">
+                            <div class="card-header card-2">
+                                <p class="card-text text-muted mt-md-4 mb-2 space">
+                                    YOUR ORDER
+                                    
+                                </p>
+                                <hr class="my-2">
+                            </div>
+                            <div class="card-body pt-0">
+                                @foreach (var cart in Model.OrderDetails) {
+                                    <div class="row justify-content-between">
+                                        <div class="col-8">
+                                            <div class="media flex-column flex-sm-row">
+                                                <img alt="Alt text" class="img-fluid" src="@cart.MenuItem.Image" width="62" height="62">
+                                                <div class="media-body my-auto">
+                                                    <div class="row ">
+                                                        <div class="ml-2 col-auto">
+                                                            <p class="mb-0">
+                                                                <b>@cart.MenuItem.ItemName</b>
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex-sm-col col-2 my-auto">
+                                            <p style="color:green;padding:0.2rem;text-align:center;border: 1px solid black;">
+                                                @cart.Count
+                                            </p>
+                                        </div>
+                                        <div class="flex-sm-col col-2 my-auto ">
+                                            <p>
+                                                <b>$@cart.MenuItem.Price</b>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <hr class="my-2">
+                                }
+
+                                <div class="row ">
+                                    <div class="col">
+                                        <div class="row justify-content-between">
+                                            <div class="col-4">
+                                                <p>
+                                                    <b style="font-size: 1.2rem">Total</b>
+                                                </p>
+                                            </div>
+                                            <div class="flex-sm-col col-auto">
+                                                <p class="mb-1" style="font-size: 1.2rem; color: red">
+                                                    <b>$@Model.OrderHeader.TotalFinal</b>
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <hr class="my-0">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
