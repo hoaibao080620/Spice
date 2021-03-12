@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Spice.Models {
     public class Coupon {
+        
         [Key]
         [Required]
         public int CouponId { get; set; }

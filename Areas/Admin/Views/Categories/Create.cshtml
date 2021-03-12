@@ -8,10 +8,11 @@
         <div class="form-group">
             <label asp-for="Name">Name</label>
             <input type="text" class="form-control" asp-for="Name" placeholder="Enter Name">
+            <span asp-validation-for="Name" class="text-danger"></span>
         </div>
         <button type="submit" class="btn btn-primary">Submit</button>
         <a class="btn btn-info" asp-action="Index">Back to list</a>
-        <span asp-validation-for="Name" class="text-danger"></span>
+        
     </form>
 </div>
 

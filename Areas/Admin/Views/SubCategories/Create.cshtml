@@ -30,21 +30,18 @@
                 </div>
                 <div class="col-7 offset-1">
                     <input type="text" class="form-control" asp-for="SubCategory.SubCategoryName">
+                    <span asp-validation-for="SubCategory.SubCategoryName" class="text-danger"></span>
                 </div>
-
-
             </div>
             <div style="margin:0 auto; text-align: center; padding-top : .5rem">
                 <button type="submit" class="btn btn-primary">Submit</button>
                 <a class="btn btn-info" asp-action="Index">Back to list</a>
             </div>
-
-            <span asp-validation-for="SubCategory.SubCategoryName" class="text-danger"></span>
         </form>
     </div>
 
     <div class="col-3 offset-1">
-        @if (Model.SubCategoriesExist.Count() > 0) {
+        @if (Model.SubCategoriesExist.Any()) {
             <p>Sub categories exist</p>
             <div id="subCategoriesExist">
 
@@ -64,22 +61,22 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
     <script>
-        var UpdateSubCategoriesExist = () => {
-            var CategoryId = document.getElementById('categorySelect').value;
-            $list = $('#subCategoriesExist');
+        let UpdateSubCategoriesExist = () => {
+            let CategoryId = document.getElementById('categorySelect').value;
+            let list = $('#subCategoriesExist');
             $.ajax({
                 url: `/Admin/SubCategories/GetSubCategoriesExist/${CategoryId}`,
                 type: 'GET',
                 dataType: 'text',
                 success: (data) => {
-                    var result = JSON.parse(data);
-                    $list.html('');
-                    $list.append('<ul class="list-group">');
+                    let result = JSON.parse(data);
+                    list.html('');
+                    list.append('<ul class="list-group">');
                     console.log(result);
-                    for (item of result) {
-                        $list.append(`<li class="list-group-item">${item.subCategoryName}</li>`);
+                    for (let item of result) {
+                        list.append(`<li class="list-group-item">${item.subCategoryName}</li>`);
                     }
-                    $list.append('</ul>');
+                    list.append('</ul>');
                 }
             })
         }

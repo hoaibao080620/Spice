@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Policy;
 using System.Threading.Tasks;
+using AutoMapper;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI;
@@ -13,12 +16,21 @@ using Spice.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using NETCore.MailKit.Extensions;
+using NETCore.MailKit.Infrastructure.Internal;
+using Spice.Models;
 using Spice.Services;
+using Spice.Utilities;
+using Spice.Validators;
+using Stripe;
+using Stripe.BillingPortal;
 
 namespace Spice {
     public class Startup {
         public Startup(IConfiguration configuration) {
             Configuration = configuration;
+            StripeConfiguration.ApiKey =
+                "sk_test_51I9C85F9AODfnpB1KCouR1uyomvh4oWzVjOiWyOfCIWXn5ckSoTNyIUYuocuhG4J2hOJWzvr4gN4bLeqwThDfF9f00rIb64SYv";
         }
 
         private IConfiguration Configuration { get; }
@@ -28,11 +40,20 @@ namespace Spice {
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection")));
-            services.AddIdentity<IdentityUser, IdentityRole>(options => options.SignIn.RequireConfirmedEmail = false)
+            services.AddIdentity<IdentityUser, IdentityRole>(options => {
+                    options.SignIn.RequireConfirmedEmail = true;
+                    options.SignIn.RequireConfirmedPhoneNumber = false;
+                })
                 .AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
             services.AddSingleton<IEmailSender, EmailSender>();
-            services.AddControllersWithViews().AddRazorRuntimeCompilation();
+            services.AddControllersWithViews().AddRazorRuntimeCompilation()
+                .AddFluentValidation(f => f.RegisterValidatorsFromAssemblyContaining<CategoryValidator>());
             services.AddRazorPages().AddRazorRuntimeCompilation();
+            services.AddAutoMapper(typeof(Startup));
+            services.Configure<StripeSetting>(Configuration.GetSection("Stripe"));
+            var mailkit = Configuration.GetSection("Email").Get<MailKitOptions>();
+            services.AddMailKit(config =>
+                config.UseMailKit(mailkit));
             services.ConfigureApplicationCookie(options =>
             {
                 options.LoginPath = "/Identity/Account/Login";
@@ -60,13 +81,13 @@ namespace Spice {
             }
             app.UseHttpsRedirection();
             app.UseStaticFiles();
-
+            
             app.UseRouting();
 
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseSession();
-
+            
             app.UseEndpoints(endpoints => {
                 endpoints.MapControllerRoute(
                     name: "default",

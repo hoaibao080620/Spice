@@ -40,10 +40,10 @@
                 @foreach (var item in Model) {
                     <tr >
                         @{
-                            string imageSrc = "";
+                            var imageSrc = "";
                             if (item.CouponImage != null) {
-                                string base64String = Convert.ToBase64String(item.CouponImage, 0, item.CouponImage.Length);
-                                imageSrc = "data:image/jpg;base64," + base64String;
+                                var base64String = Convert.ToBase64String(item.CouponImage);
+                                imageSrc = "data:image/gif;base64," + base64String;
                             }
                         }
                         @if (imageSrc != "") {

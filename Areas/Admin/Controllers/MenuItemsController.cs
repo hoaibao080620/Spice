@@ -74,7 +74,8 @@ namespace Spice.Areas.Admin.Controllers {
                 System.IO.File.Copy(uploads,webRoot+@"\images\"+itemFromDb.Id+".png");
                 itemFromDb.Image = @"\images\" + itemFromDb.Id + ".png";
             }
-            
+
+            await _dbContext.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
@@ -114,8 +115,18 @@ namespace Spice.Areas.Admin.Controllers {
                 var extensions = Path.GetExtension(files[0].FileName);
                 await using (var fileStream = new FileStream(Path.Combine(upload, itemFromDb.Id + extensions)
                     , FileMode.Create)) {
+                    var allMenuItemImages = new DirectoryInfo(upload).GetFiles();
+                    foreach (var file in allMenuItemImages) {
+                        var fileName = file.Name.Trim().Split(".")[0];
+                        if (fileName.Trim() == itemFromDb.Id.ToString()) {
+                            System.IO.File.Delete(file.FullName);
+                            break;
+                        }
+                    }
                     await files[0].CopyToAsync(fileStream);
                 }
+
+                
                 itemFromDb.Image = @"\images\" + itemFromDb.Id + extensions;
             }
 
@@ -151,7 +162,11 @@ namespace Spice.Areas.Admin.Controllers {
         [HttpPost]
         public async Task<IActionResult> Delete(int id) {
             var itemRemoved = await _dbContext.MenuItems.FindAsync(id);
+            var image = _hostingEnvironment.WebRootPath + itemRemoved.Image;
             _dbContext.MenuItems.Remove(itemRemoved);
+            if (System.IO.File.Exists(image)) {
+                System.IO.File.Delete(image);
+            }
             await _dbContext.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }

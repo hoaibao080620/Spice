@@ -1,14 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using MimeKit.Text;
 using Spice.Data;
 using Spice.Models;
 using Spice.Models.ViewModels;
@@ -19,12 +23,17 @@ namespace Spice.Areas.Customer.Controllers {
     public class HomeController : Controller {
         private readonly ILogger<HomeController> _logger;
         private readonly ApplicationDbContext _dbContext;
+        private readonly IWebHostEnvironment _webHost;
 
-        public HomeController(ILogger<HomeController> logger, ApplicationDbContext dbContext) {
+        public HomeController(ILogger<HomeController> logger,
+            ApplicationDbContext dbContext,
+            IWebHostEnvironment webHost) {
             _logger = logger;
             _dbContext = dbContext;
+            _webHost = webHost;
         }
-
+        
+        
         public async Task<IActionResult> Index() {
             var viewModel = new HomePageViewModel() {
                 Coupons = await _dbContext.Coupons.Where(m => m.IsActive == true).ToListAsync(),
@@ -33,12 +42,21 @@ namespace Spice.Areas.Customer.Controllers {
                     .Include(m => m.Category).ToListAsync()
             };
 
-            // var claimsIdentity = (ClaimsIdentity) User.Identity;
-            // var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
-            //
-            // var cartCount = await _dbContext.ShoppingCarts
-            //     .Where(s => s.UserId == userId).CountAsync();
-            // HttpContext.Session.SetInt32(StaticData.CartCount,cartCount);
+            var claimsIdentity = (ClaimsIdentity) User.Identity;
+            var claim = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier);
+            if (claim != null) {
+                var cartCount = await _dbContext.ShoppingCarts
+                    .Where(s => s.UserId == claim.Value).CountAsync();
+                HttpContext.Session.SetInt32(StaticData.CartCount,cartCount);
+            }
+
+            var webPath = _webHost.WebRootPath;
+            var files = Directory.GetFiles($@"{webPath}\images\Gallery");
+            for (var i = 0;i<files.Length;i++) {
+                files[i] = files[i].Substring(webPath.Length);
+            }
+
+            viewModel.Images = files;
             
             return View(viewModel);
         }
@@ -61,6 +79,7 @@ namespace Spice.Areas.Customer.Controllers {
                 MenuItemId = menuItemFromDb.Id
             };
             return View(shoppingCart);
+            
         }
 
         [Authorize]
@@ -77,11 +96,14 @@ namespace Spice.Areas.Customer.Controllers {
 
                 var shoppingCartView = new ShoppingCart() {
                     MenuItem = menuItemFromDb,
-                    MenuItemId = menuItemFromDb.Id
+                    MenuItemId = menuItemFromDb.Id,
+                    DateCreated = DateTime.Now
                 };
                 return View(shoppingCartView);
             }
-
+            shoppingCart.MenuItem.Id = shoppingCart.MenuItemId;
+            shoppingCart.DateCreated = DateTime.Now;
+            
             var claimsIdentity = (ClaimsIdentity) User.Identity;
             var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
 
@@ -101,8 +123,11 @@ namespace Spice.Areas.Customer.Controllers {
             var cartCount = await _dbContext.ShoppingCarts
                 .Where(s => s.UserId == userId).CountAsync();
             HttpContext.Session.SetInt32(StaticData.CartCount,cartCount);
-            
             return RedirectToAction(nameof(Index));
         }
+        
+        
+
+        
     }
 }

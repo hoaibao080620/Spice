@@ -1,10 +1,33 @@
-﻿@model Spice.Models.ViewModels.HomePageViewModel
+﻿@using Microsoft.AspNetCore.Http
+@model Spice.Models.ViewModels.HomePageViewModel
+@inject IHttpContextAccessor HttpContextAccessor;
 @{
     ViewData["Title"] = "Home Page";
 }
+
+
 <style>
-  
+  .image-overlay {
+    position: absolute;
+    left: 0;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      background-color: red;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1;
+  }
 </style>
+
+@section backgroundImage {
+    <div class="backgroundImageInner">
+        <div class="image-overlay"></div>
+        <div class="text-center text-white" style="z-index: 2">
+            <h1 style="font-size: 4rem">Welcome to our restaurant</h1>
+        </div>
+        <button id="scrollOrder" onclick="ScrollToOrder()" class="btn btn-success" style="z-index: 2">Order Now</button>
+    </div>
+}
 @if (Model.Coupons.Any()) {
     <div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
         <ol class="carousel-indicators">
@@ -23,12 +46,12 @@
                 var imageSrc = "data:image/jpg;base64," + base64;
                 if (i == 0) {
                     <div class="carousel-item active">
-                        <img height="200px" class="d-block w-100" src="@imageSrc" alt="Alt slide">
+                        <img height="300px" class="d-block w-100" src="@imageSrc" alt="Alt slide">
                     </div>
                 }
                 else {
                     <div class="carousel-item">
-                        <img height="200px" class="d-block w-100" src="@imageSrc" alt="Alt slide">
+                        <img height="300px" class="d-block w-100" src="@imageSrc" alt="Alt slide">
                     </div>
                 }
             }
@@ -43,32 +66,74 @@
         </a>
     </div>
 }
-<div class="backgroundWhiteBorder container">
-    <ul id="menu-filters" class="d-flex justify-content-center">
-        <li  class="btn btn-outline-success active" style="cursor: pointer;margin-right: 0.5rem" data-filter=".AllMenuItem">Show all</li>
-        @foreach (var category in Model.Categories) {
-            <li class="btn btn-outline-success" 
-                style="cursor: pointer;margin-right: 0.5rem" 
-                data-filter=".@category.Name.Replace(" ",String.Empty)">@category.Name</li>
-        }
-    </ul>
-    @foreach (var category in Model.Categories) {
-        <partial name="_MenuItemPartialView" model="Model.MenuItems
-    .Where(m => m.Category.Name == category.Name )"/>
-    }
-    
-</div>
+<section id="menu" class="menu section-bg">
+      <div class="container" data-aos="fade-up">
+
+        <div class="section-title">
+          <h2>Menu</h2>
+          <p>Check Our Tasty Menu</p>
+        </div>
+
+        <div class="row" data-aos="fade-up" data-aos-delay="100">
+          <div class="col-lg-12 d-flex justify-content-center">
+            <ul id="menu-flters">
+              <li data-filter=".AllMenuItem" class="filter-active">All</li>
+                @foreach (var category in Model.Categories) {
+                    <li style="font-family: 'Playfair Display', 'serif';" data-filter=".@category.Name.Replace(" ", string.Empty)">@category.Name</li>
+                }
+              
+              @* <li data-filter=".@category.Name.Replace(" ", string.Empty)">@category.Name</li> *@
+              @* <li data-filter=".filter-salads">Salads</li> *@
+              @* <li data-filter=".filter-specialty">Specialty</li> *@
+            </ul>
+          </div>
+        </div>
+
+        <div class="row menu-container" data-aos="fade-up" data-aos-delay="200">
+
+            @foreach (var category in Model.Categories) {
+                    <partial name="_MenuItemPartialView" model="Model.MenuItems
+                .Where(m => m.Category.Name == category.Name )"/>
+                }
+            
+
+          
+          
+
+        </div>
+
+      </div>
+    </section><!-- End Menu Section -->
+<section id="gallery" class="gallery">
+
+      <div class="container" data-aos="fade-up">
+        <div class="section-title">
+          <h2>Gallery</h2>
+          <p>Some photos from Our Restaurant</p>
+        </div>
+      </div>
+
+      <div class="container-fluid" data-aos="fade-up" data-aos-delay="100">
+          <div class="row no-gutters">
+              @foreach (var image in Model.Images) {
+              <div class="col-lg-3 col-md-4">
+                  <div class="gallery-item">
+                      <img src="@image" alt="" class="img-fluid">
+                  </div>
+              </div>
+          }
+        </div>
+
+      </div>
+    </section><!-- End Gallery Section -->
 
 @section Scripts {
-    <script
-        src="https://code.jquery.com/jquery-3.5.1.js"
-        integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc="
-        crossorigin="anonymous"></script>
+
     <script>
         (function ($) {
-            $("#menu-filters li").click(function() {
-                $("#menu-filters li").removeClass('active');
-                $(this).addClass('active');
+            $("#menu-flters li").click(function() {
+                $("#menu-flters li").removeClass('filter-active');
+                $(this).addClass('filter-active');
                 let selectedFilter = $(this).data("filter");
                 $('.AllMenuItem').fadeOut();
                 setTimeout(function () {
@@ -76,6 +141,69 @@
                 },300);
                 });
         })(jQuery);
+        function ScrollToOrder() {
+            let view = document. getElementById('view');
+            view.scrollIntoView();
+        }
+        
+        
     </script>
+    <script src="assets/js/main.js"></script>
+    <script>
+        function AddCart(id) {
+            let xht = new XMLHttpRequest();
+            let cart = $('#cartCount').text();
+            let cartContent = $('#cartCount');
+            xht.onreadystatechange = function () {
+                if (xht.readyState === 4) {
+                    if (xht.status === 200) {
+                       
+                            console.log('hello')
+                            tata.success('Notification', 'Add item to cart success',{
+                               duration : 2500 
+                            });
+                            console.log(JSON.parse(xht.responseText)['isExist'])
+                            let isExist = JSON.parse(xht.responseText)['isExist'];
+                            if (!isExist) {
+                                cartContent.html('');
+                                cartContent.html(Number.parseInt(cart)+1);                                  
+                            }                    
+                    }
+                     else {
+                       tata.error('Notification', 'Please login to add cart',{
+                          duration : 2500 
+                       });     
+                    }
+                }
+            }
+    
+            xht.open('post',`/Customer/Cart/AddToCart/${id}`,true);
+            xht.send();
+                        
+        }
+    </script>
+
+    <script>
+        window.onload = function() {
+          if (localStorage.getItem('key')) {
+            console.log('Load shopping cart');    
+          }
+          else {
+              localStorage.setItem('key',create_UUID())
+          }
+        };
+        function create_UUID(){
+            let dt = new Date().getTime();
+            let uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = (dt + Math.random()*16)%16 | 0;
+                dt = Math.floor(dt/16);
+                return (c=='x' ? r :(r&0x3|0x8)).toString(16);
+            });
+            return uuid;
+        }
+    
+        
+    </script>
+    <script src="tata/dist/tata.js"></script>
 }
 

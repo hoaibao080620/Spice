@@ -28,12 +28,11 @@ namespace Spice.Areas.Admin.Controllers {
 
         [HttpPost]
         public async Task<IActionResult> Create(Category category) {
-            if(ModelState.IsValid) {
-                _dbContext.Add(category);
-                await _dbContext.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(category);
+            if (!ModelState.IsValid) 
+                return View(category);
+            _dbContext.Add(category);
+            await _dbContext.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
         }
 
         public async Task<IActionResult> Edit(int? id) {
@@ -49,12 +48,11 @@ namespace Spice.Areas.Admin.Controllers {
 
         [HttpPost]
         public async Task<IActionResult> Edit(Category category) {
-            if(ModelState.IsValid) {
-                _dbContext.Categories.Update(category);
-                await _dbContext.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View();
+            if (!ModelState.IsValid) 
+                return View();
+            _dbContext.Categories.Update(category);
+            await _dbContext.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
         }
 
         public async Task<IActionResult> Delete(int? id) {
@@ -70,21 +68,21 @@ namespace Spice.Areas.Admin.Controllers {
 
         [HttpPost, ActionName("Delete")]
         public async Task<IActionResult> DeleteConfirm(int? id) {
-            var cateogry = await _dbContext.Categories.FindAsync(id);
-            if(cateogry==null) {
+            var category = await _dbContext.Categories.FindAsync(id);
+            if(category==null) {
                 return View();
             }
-            _dbContext.Categories.Remove(cateogry);
+            _dbContext.Categories.Remove(category);
             await _dbContext.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         public async Task<IActionResult>Detail(int? id) {
-            var cateogry = await _dbContext.Categories.FindAsync(id);
-            if (cateogry == null) {
+            var category = await _dbContext.Categories.FindAsync(id);
+            if (category == null) {
                 return NotFound();
             }
-            return View(cateogry);
+            return View(category);
         }
     }
 }

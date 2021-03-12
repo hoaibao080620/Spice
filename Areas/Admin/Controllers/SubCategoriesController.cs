@@ -102,7 +102,7 @@ namespace Spice.Areas.Admin.Controllers {
                 var isSubCategoriesExist = await dbContext.SubCategories.Include(s => s.Category)
                     .Where(s => s.CategoryId == model.SubCategory.CategoryId && s.SubCategoryName
                     == model.SubCategory.SubCategoryName).ToListAsync();
-                if (isSubCategoriesExist.Count() > 0) {
+                if (isSubCategoriesExist.Any()) {
                     StatusMessage = $"Error : Exist in {isSubCategoriesExist.First().Category.Name}";
                 }
                 else {

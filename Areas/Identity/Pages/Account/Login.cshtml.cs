@@ -49,9 +49,11 @@ namespace Spice.Areas.Identity.Pages.Account
 
         public class InputModel
         {
+            // [Required]
+            // [EmailAddress]
+            // public string Email { get; set; }
             [Required]
-            [EmailAddress]
-            public string Email { get; set; }
+            public string Username { get; set; }
 
             [Required]
             [DataType(DataType.Password)]
@@ -61,21 +63,25 @@ namespace Spice.Areas.Identity.Pages.Account
             public bool RememberMe { get; set; }
         }
 
-        public async Task OnGetAsync(string returnUrl = null)
+        public async Task<IActionResult> OnGetAsync(string returnUrl = null)
         {
+            if (User.Identity.IsAuthenticated) {
+                return RedirectToAction("Index", "Home", new {area = "Customer"});
+            }
             if (!string.IsNullOrEmpty(ErrorMessage))
             {
                 ModelState.AddModelError(string.Empty, ErrorMessage);
             }
 
             returnUrl = returnUrl ?? Url.Content("~/");
-
+            
             // Clear the existing external cookie to ensure a clean login process
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
-
+            
             ReturnUrl = returnUrl;
+            return Page();
         }
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
@@ -85,10 +91,10 @@ namespace Spice.Areas.Identity.Pages.Account
             {
                 // This doesn't count login failures towards account lockout
                 // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-                var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: true);
+                var result = await _signInManager.PasswordSignInAsync(Input.Username, Input.Password, Input.RememberMe, lockoutOnFailure: true);
                 if (result.Succeeded) {
                     var user = await _dbContext.ApplicationUser
-                        .FirstOrDefaultAsync(s => s.Email == Input.Email);
+                        .FirstOrDefaultAsync(s => s.UserName == Input.Username);
 
                     var cartCount = await _dbContext.ShoppingCarts
                         .Where(s => s.UserId == user.Id).CountAsync();

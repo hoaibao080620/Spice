@@ -1,32 +1,38 @@
 ﻿@model IEnumerable<MenuItem>
-
+<style>
+    .hover_scale {
+        transition: 1s ease all;
+    }
+    
+    .hover_scale:hover {
+        transform: scale(1.2);
+    }
+</style>
 @if (Model.Any()) {
-    <div class="container border-dark post AllMenuItem mb-3 rounded border border-success @Model.FirstOrDefault()?.Category.Name.Replace(" ", String.Empty)">
-        <h4 class="text-info">@Model.FirstOrDefault()?.Category.Name</h4>
-        @foreach (var item in Model) {
-            <div class="row "
-                 style="margin-bottom: 1rem">
-                <div class="col-3">
-                    <img width="80%" height="100px" src="@item.Image" alt="Alt text">
+    @foreach (var item in Model) {
+        <div class="post AllMenuItem col-lg-6 menu-item filter-starters @Model.FirstOrDefault()?.Category.Name.Replace(" ", string.Empty)">
+            <img src="@item.Image" class="menu-img" alt="">
+            <div class="menu-content">
+                <div>
+                    <a asp-action="Detail" asp-controller="Home" asp-area="Customer" asp-route-id="@item.Id">
+                        @item.ItemName
+                    </a><span>$@item.Price</span>
                 </div>
-                <div class="offset-1 col-8">
-                    <div class="row">
-                        <div class="col-10" style="font-size: 1.2rem">
-                            @item.ItemName
-                            <p style="font-size: 1rem" class="text-success">@item.SubCategory.SubCategoryName</p>
-                        </div>
-                        <div class="col-2 text-danger" style="font-size: 1.5rem">@item.Price$</div>
-                    </div>
-                    <div class="row">
-                        <div class="col-10">
-                            @item.description
-                        </div>
-                        <div class="col-2">
-                            <a class="btn btn-info" asp-action="Detail" asp-route-id="@item.Id">Detail</a>
-                        </div>
-                    </div>
+
+                <div style="margin-left: 1rem;margin-top: .5rem">
+                    <a id="add_Cart" style="cursor:pointer" onclick="AddCart(@item.Id)">
+                        <i class="fas fa-cart-plus hover_scale" style="font-size: 1.5rem; color: #1c7430"></i>
+                    </a>
+                    <a asp-action="Detail" asp-controller="Home" asp-area="Customer" asp-route-id="@item.Id">
+                        <i class="fas fa-info-circle hover_scale" style="font-size: 1.5rem; color: #138496"></i>
+                    </a>
                 </div>
+
             </div>
-        }
-    </div>
+            <div class="menu-ingredients">
+                @item.description
+            </div>
+        </div>
+    }
 }
+

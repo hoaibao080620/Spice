@@ -6,8 +6,10 @@
 <div class="backgroundWhiteBorder">
     <div class="row">
         <form class="col-8" method="post" asp-controller="Home" asp-action="Detail">
-            <input type="hidden" asp-for="MenuItem.CategoryId" value="@Model.MenuItem.CategoryId">
-            <input type="hidden" asp-for="MenuItem.SubCategoryId" value="@Model.MenuItem.SubCategoryId">
+            <input type="hidden" asp-for="MenuItem.CategoryId" >
+            <input type="hidden" asp-for="MenuItem.SubCategoryId">
+            <input type="hidden" asp-for="MenuItemId" >
+            <input type="hidden" asp-for="MenuItem.Id">
             <div>
                 <div class="form-group row">
                     <div class="col-2">
@@ -84,7 +86,6 @@
                         <input asp-for="Count" type="number" value="1" class="form-control" min="1">
                     </div>
                 </div>
-                <input type="hidden" asp-for="MenuItemId" value="@Model.MenuItemId">
                 <div style="margin:0 auto; text-align: center; padding-top : .5rem">
                     <input type="submit" class="btn btn-danger" value="Add To Cart"/>
                     <a class="btn btn-info" asp-action="Index">Back to list</a>
