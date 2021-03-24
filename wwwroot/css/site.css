@@ -9,7 +9,7 @@ a.navbar-brand {
 
 /* Provide sufficient contrast against white background */
 a {
-  color: #0366d6;
+  color: black!important;
 }
 
 .btn-primary {
@@ -67,6 +67,7 @@ html {
 }
 
 body {
+
   /* Margin bottom by footer height */
   margin-bottom: 60px;
 }
@@ -79,7 +80,7 @@ body {
 }
 
 .backgroundWhiteBorder {
-    background-color : #ffffff;
+    background-color : #fafafa;
     padding : 2rem;
     margin-bottom : 1rem;
     border-radius : .8rem;
@@ -97,6 +98,10 @@ body {
   justify-content: center;
   flex-direction: column;
   background-image: url("https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80");
+}
+
+.access_denied {
+  margin-top: 2rem;
 }
 
 

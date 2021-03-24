@@ -1,9 +1,14 @@
 ﻿@model Category
 @{
     ViewData["Title"] = "Create";
+    Layout = "_Admin";
 }
-<div class="backgroundWhiteBorder">
-    <form method="post" asp-controller="Categories" asp-action="Create">
+@section Navbar {
+    <partial name="_NavbarPartialView" model=@("Categories") />
+}
+<div class="backgroundWhiteBorder row">
+    
+    <form class="col-6" method="post" asp-controller="Categories" asp-action="Create">
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
         <div class="form-group">
             <label asp-for="Name">Name</label>
@@ -12,7 +17,11 @@
         </div>
         <button type="submit" class="btn btn-primary">Submit</button>
         <a class="btn btn-info" asp-action="Index">Back to list</a>
-        
+
     </form>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial"/>
+}
 

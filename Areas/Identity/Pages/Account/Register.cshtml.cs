@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FluentValidation;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
@@ -84,9 +85,18 @@ namespace Spice.Areas.Identity.Pages.Account
 
             [Required]
             public string Name { get; set; }
+            
+            
             public string PhoneNumber { get; set; }
             public string Address { get; set; }
             public string Image { get; set; }
+        }
+
+        public class InputModelValidator : AbstractValidator<InputModel> {
+            public InputModelValidator() {
+                RuleFor(x => x.PhoneNumber).NotNull().Matches(@"\+(84[3|5|7|8|9])+([0-9]{8})\b")
+                    .WithMessage("Enter correct format, start with +84");
+            }
         }
 
         public async Task OnGetAsync(string returnUrl = null)
@@ -95,6 +105,7 @@ namespace Spice.Areas.Identity.Pages.Account
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
         }
 
+        
         public async Task<IActionResult> OnPostAsync(string returnUrl = null) {
             var role = Request.Form["role"].ToString();
             returnUrl ??= Url.Content("~/");
@@ -102,13 +113,24 @@ namespace Spice.Areas.Identity.Pages.Account
             if (ModelState.IsValid)
             {
                 if (await _userManager.Users.FirstOrDefaultAsync(u => u.Email == Input.Email) != null) {
+                    TempData.Remove("TempMessage");
                     TempData["TempMessage"] = "This email is already exist, try another one!";
                     return Page();
                 }
                 
                 if (await _userManager.Users
-                    .FirstOrDefaultAsync(u => u.Email == Input.Email) != null) {
-                    TempData["TempMessage"] = "This email is already exist, try another one!";
+                    .FirstOrDefaultAsync(u => u.UserName == Input.Username) != null) {
+                    TempData.Remove("TempMessage");
+                    TempData["TempMessage"] = "This username is already exist, try another one!";
+                    
+                    return Page();
+                }
+
+                if (await _userManager.Users
+                    .FirstOrDefaultAsync(u => u.PhoneNumber == Input.PhoneNumber && u.PhoneNumberConfirmed) != null) {
+                    TempData.Remove("TempMessage");
+                    TempData["TempMessage"] = "This phone is already register!";
+                    
                     return Page();
                 }
                 var user = new ApplicationUser() {
@@ -123,14 +145,7 @@ namespace Spice.Areas.Identity.Pages.Account
                 var result = await _userManager.CreateAsync(user, Input.Password);
 
                 if (result.Succeeded) {
-                    if (!await _roleManager.RoleExistsAsync(UserRole.Kitchen))
-                        await _roleManager.CreateAsync(new IdentityRole(UserRole.Kitchen));
-                    if (!await _roleManager.RoleExistsAsync(UserRole.Manager))
-                        await _roleManager.CreateAsync(new IdentityRole(UserRole.Manager));
-                    if (!await _roleManager.RoleExistsAsync(UserRole.EndCustomer))
-                        await _roleManager.CreateAsync(new IdentityRole(UserRole.EndCustomer));
-                    if (!await _roleManager.RoleExistsAsync(UserRole.FrontDesk))
-                        await _roleManager.CreateAsync(new IdentityRole(UserRole.FrontDesk));
+                    
                     if (string.IsNullOrEmpty(role)) {
                         role = UserRole.EndCustomer;
                     }
@@ -146,7 +161,6 @@ namespace Spice.Areas.Identity.Pages.Account
                         await using (var fileStream = new FileStream(destinationUserImage, FileMode.Create)) {
                             await files[0].CopyToAsync(fileStream);
                         }
-
                         userFromDb.Image = @"\images\User\" + $"{userFromDb.Id}{extension}";
                     }
                     else {
@@ -156,43 +170,20 @@ namespace Spice.Areas.Identity.Pages.Account
                         userFromDb.Image = @$"\images\User\{userFromDb.Id}.jpg";
                     }
                     
-                    
+                    await _dbContext.SaveChangesAsync();
                     _logger.LogInformation("User created a new account with password.");
-                    
+
                     if (role == UserRole.EndCustomer) {
                         var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                         var hostname = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
-                        var link = hostname+Url.Action("ConfirmEmail", 
-                            "Email", new {area = "Customer",userId = user.Id,code});
+                        var link = hostname + Url.Action("ConfirmEmail",
+                            "Email", new { area = "Customer", userId = user.Id, code });
                         var message = $"Link Confirm email: <a href=\"{link}\">Here</a>";
                         await _emailSender.SendEmailAsync(user.Email, user.Name, message);
-                        return RedirectToAction("EmailConfirmSuccess", "Email",new {area = "Customer"});
+                        return RedirectToAction("EmailConfirmSuccess", "Email", new { area = "Customer" });
                     }
                     user.EmailConfirmed = true;
                     await _dbContext.SaveChangesAsync();
-                    // var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                    // code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-                    // var callbackUrl = Url.Page(
-                    //     "/Account/ConfirmEmail",
-                    //     pageHandler: null,
-                    //     values: new { area = "Identity", userId = user.Id, code = code, returnUrl = returnUrl },
-                    //     protocol: Request.Scheme);
-                    //
-                    // await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
-                    //     $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
-                    //
-                    // if (_userManager.Options.SignIn.RequireConfirmedAccount)
-                    // {
-                    //     return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
-                    // }
-                    // else
-                    // {
-                    //     await _signInManager.SignInAsync(user, isPersistent: false);
-                    //     return LocalRedirect(returnUrl);
-                    // }
-
-                    
-
                     return RedirectToAction("Index", "User",new {area = "Admin"});
                 }
                 foreach (var error in result.Errors)

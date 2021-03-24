@@ -3,6 +3,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Spice.Data;
@@ -16,22 +17,24 @@ namespace Spice.Areas.Customer.Controllers {
     [Authorize]
     public class OrderController : Controller {
         private readonly ApplicationDbContext _dbContext;
+        private readonly IEmailSender _emailSender;
 
-        public OrderController(ApplicationDbContext dbContext) {
+        public OrderController(ApplicationDbContext dbContext,IEmailSender emailSender) {
             _dbContext = dbContext;
+            _emailSender = emailSender;
         }
         
         public async Task<IActionResult> Confirm(int id) {
             var claimIdentity = (ClaimsIdentity) User.Identity;
             var userId = claimIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
-            
             var viewModel = new DetailAndOrderHeaderViewModel {
                 OrderHeader = await _dbContext.OrderHeaders.Include(o => o.ApplicationUser)
                     .FirstOrDefaultAsync(o => o.Id == id && o.UserId == userId),
                 OrderDetails = await _dbContext.OrderDetails.Include(o => o.MenuItem)
                     .Where(o => o.OrderId == id).ToListAsync()
             };
-            
+            await _emailSender.SendEmailAsync(viewModel.OrderHeader.ApplicationUser.Email, "Confirm Order",
+                $"Your order #{viewModel.OrderHeader.Id} has been confirm");
             return View(viewModel);
         }
 

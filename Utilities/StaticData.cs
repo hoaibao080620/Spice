@@ -9,5 +9,6 @@ namespace Spice.Utilities {
         public const string CartCount = "ssCartCount";
         public const string DefaultUserImage = "default_user.jpg";
         public const string CouponCode = "ssCouponCode";
+        public const string CartCookie = "CartCookie";
     }
 }

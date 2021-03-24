@@ -1,10 +1,18 @@
 ﻿@model IEnumerable<Coupon>
 @{
     ViewData["Title"] = "Index";
+    Layout = "_Admin";
 }
-
+@section Navbar {
+    <partial name="_NavbarPartialView" model=@("Coupons") />
+}
+<style>
+    td {
+            font-size: 1.2rem;
+        }
+</style>
 <br />
-<div class="border backgroundWhiteBorder">
+
     <div class="row">
         <div class="col-6">
             <h2 class="text-info">Coupon List</h2>
@@ -16,8 +24,8 @@
 
     <div>
         @if (Model.Count() > 0) {
-            <table class="table table-striped">
-                <tr>
+            <table class="table ">
+                <tr class="thead-dark">
                     <th>
                         Coupon Image
                     </th>
@@ -34,7 +42,7 @@
                         Is Active
                     </th>
                     <th>
-                        Action
+                        
                     </th>
                 </tr>
                 @foreach (var item in Model) {
@@ -67,5 +75,5 @@
             <p>Category list is empty</p>
         }
     </div>
-</div>
+
 

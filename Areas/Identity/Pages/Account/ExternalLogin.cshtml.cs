@@ -1,18 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Spice.Data;
+using Spice.Models;
+using Spice.Utilities;
 
 namespace Spice.Areas.Identity.Pages.Account
 {
@@ -22,18 +29,27 @@ namespace Spice.Areas.Identity.Pages.Account
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IEmailSender _emailSender;
+        private readonly ApplicationDbContext _dbContext;
+        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly ILogger<ExternalLoginModel> _logger;
 
         public ExternalLoginModel(
             SignInManager<IdentityUser> signInManager,
             UserManager<IdentityUser> userManager,
             ILogger<ExternalLoginModel> logger,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            ApplicationDbContext dbContext,
+            RoleManager<IdentityRole> roleManager,
+            IWebHostEnvironment webHostEnvironment)
         {
             _signInManager = signInManager;
             _userManager = userManager;
             _logger = logger;
             _emailSender = emailSender;
+            this._dbContext = dbContext;
+            _roleManager = roleManager;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         [BindProperty]
@@ -51,7 +67,16 @@ namespace Spice.Areas.Identity.Pages.Account
             [Required]
             [EmailAddress]
             public string Email { get; set; }
+            [Required]
+            public string Name { get; set; }
+            [Required]
+            [RegularExpression(@"\+(84[3|5|7|8|9])+([0-9]{8})\b",ErrorMessage = "Start with +84")]
+            public string PhoneNumber { get; set; }
+            [Required]
+            public string Address { get; set; }
         }
+
+        
 
         public IActionResult OnGetAsync()
         {
@@ -80,6 +105,15 @@ namespace Spice.Areas.Identity.Pages.Account
                 ErrorMessage = "Error loading external login information.";
                 return RedirectToPage("./Login", new { ReturnUrl = returnUrl });
             }
+            
+            if (await _userManager.Users
+                .FirstOrDefaultAsync(u => u.Email == 
+                    info.Principal.FindFirstValue(ClaimTypes.Email) && !u.EmailConfirmed) != null ) {
+                TempData["AlreadyTaken"] = "Your email has been register!";
+                return RedirectToPage("Login");
+            }
+                
+            
 
             // Sign in the user with this external login provider if the user already has a login.
             var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor : true);
@@ -101,7 +135,8 @@ namespace Spice.Areas.Identity.Pages.Account
                 {
                     Input = new InputModel
                     {
-                        Email = info.Principal.FindFirstValue(ClaimTypes.Email)
+                        Email = info.Principal.FindFirstValue(ClaimTypes.Email),
+                        Name = info.Principal.FindFirstValue(ClaimTypes.Name)
                     };
                 }
                 return Page();
@@ -119,38 +154,51 @@ namespace Spice.Areas.Identity.Pages.Account
                 return RedirectToPage("./Login", new { ReturnUrl = returnUrl });
             }
 
-            if (ModelState.IsValid)
-            {
-                var user = new IdentityUser { UserName = Input.Email, Email = Input.Email };
+            if (ModelState.IsValid) {
+                var user = new ApplicationUser() {
+                    Email = Input.Email,
+                    Name = Input.Name,
+                    PhoneNumber = Input.PhoneNumber,
+                    Address = Input.Address,
+                    UserName = Input.Email,
+                    EmailConfirmed = true
+                };
+                if (await _userManager.Users
+                    .FirstOrDefaultAsync(u => u.PhoneNumber == Input.PhoneNumber && u.PhoneNumberConfirmed) != null) {
+                    TempData.Remove("TempMessage");
+                    TempData["TempMessage"] = "This phone is already register!";
+                    return Page();
+                }
 
                 var result = await _userManager.CreateAsync(user);
-                if (result.Succeeded)
-                {
+                
+                if (result.Succeeded) {
+                    var webroot = _webHostEnvironment.WebRootPath;
+                    var files = Request.Form.Files;
+                    var userFromDb = await _dbContext.ApplicationUser
+                        .FirstOrDefaultAsync(u => u.Email == Input.Email);
+                    if (files.Count > 0) {
+                        var extension = Path.GetExtension(files[0].FileName);
+                        var destinationUserImage = Path.Combine(webroot, @"images\User")+@$"\{userFromDb.Id}{extension}";
+                        await using (var fileStream = new FileStream(destinationUserImage, FileMode.Create)) {
+                            await files[0].CopyToAsync(fileStream);
+                        }
+                        userFromDb.Image = @"\images\User\" + $"{userFromDb.Id}{extension}";
+                    }
+                    else {
+                        var defaultUserImage = Path.Combine(webroot, @"images\User")+$"\\{StaticData.DefaultUserImage}";
+                        var destinationUserImage = Path.Combine(webroot, @"images\User")+@$"\{userFromDb.Id}.jpg";
+                        System.IO.File.Copy(defaultUserImage,destinationUserImage);
+                        userFromDb.Image = @$"\images\User\{userFromDb.Id}.jpg";
+                    }
+                    
+                    await _dbContext.SaveChangesAsync();
+                    await _userManager.AddToRoleAsync(user, UserRole.EndCustomer);
                     result = await _userManager.AddLoginAsync(user, info);
                     if (result.Succeeded)
                     {
                         _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
-
-                        var userId = await _userManager.GetUserIdAsync(user);
-                        var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-                        var callbackUrl = Url.Page(
-                            "/Account/ConfirmEmail",
-                            pageHandler: null,
-                            values: new { area = "Identity", userId = userId, code = code },
-                            protocol: Request.Scheme);
-
-                        await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
-                            $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
-
-                        // If account confirmation is required, we need to show the link if we don't have a real email sender
-                        if (_userManager.Options.SignIn.RequireConfirmedAccount)
-                        {
-                            return RedirectToPage("./RegisterConfirmation", new { Email = Input.Email });
-                        }
-
                         await _signInManager.SignInAsync(user, isPersistent: false, info.LoginProvider);
-
                         return LocalRedirect(returnUrl);
                     }
                 }

@@ -2,8 +2,12 @@
 
 @{
     ViewBag.Title = "Update User";
-    Layout = "_Layout";
+    Layout = "_Admin";
 }
+@section Navbar {
+    <partial name="_NavbarPartialView" model=@("Users") />
+}
+
 
 <div class="backgroundWhiteBorder row">
     <div class="col-8 align-items-center">
@@ -56,3 +60,7 @@
     </div>
 
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial"/>
+}

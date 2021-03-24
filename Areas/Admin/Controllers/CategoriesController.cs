@@ -11,7 +11,7 @@ using Spice.Utilities;
 
 namespace Spice.Areas.Admin.Controllers {
     [Area("Admin")]
-    [Authorize(Roles = UserRole.Manager)]
+    [Authorize(Roles = UserRole.Manager+","+UserRole.FrontDesk)]
     public class CategoriesController : Controller {
         private readonly ApplicationDbContext _dbContext;
         

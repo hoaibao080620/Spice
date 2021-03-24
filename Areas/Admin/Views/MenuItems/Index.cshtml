@@ -1,10 +1,18 @@
 ﻿@model IEnumerable<MenuItem>
 @{
     ViewData["Title"] = "Index";
+    Layout = "_Admin";
 }
-
+@section Navbar {
+    <partial name="_NavbarPartialView" model=@("MenuItems") />
+}
+<style>
+    td {
+            font-size: 1.2rem;
+        }
+</style>
 <br />
-<div class="border backgroundWhiteBorder">
+
     <div class="row">
         <div class="col-6">
             <h2 class="text-info">Menu Item List</h2>
@@ -16,8 +24,8 @@
 
     <div>
         @if (Model.Any()) {
-            <table class="table table-striped">
-                <tr>
+            <table class="table">
+                <tr class="thead-dark">
                     <th>
                         Image
                     </th>
@@ -61,4 +69,3 @@
             <p>Menu Items list is empty</p>
         }
     </div>
-</div>

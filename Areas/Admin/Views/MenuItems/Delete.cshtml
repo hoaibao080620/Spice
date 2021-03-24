@@ -1,6 +1,10 @@
 ﻿@model Spice.Models.MenuItem;
 @{
     ViewData["Title"] = "Delete";
+    Layout = "_Admin";
+}
+@section Navbar {
+    <partial name="_NavbarPartialView" model=@("MenuItems") />
 }
 
 <div class="backgroundWhiteBorder">

@@ -13,7 +13,7 @@ using Spice.Utilities;
 
 namespace Spice.Areas.Admin.Controllers {
     [Area("Admin")]
-    [Authorize(Roles = UserRole.Manager)]
+    [Authorize(Roles = UserRole.Manager+","+UserRole.FrontDesk)]
     public class MenuItemsController : Controller {
         private readonly ApplicationDbContext _dbContext;
         private readonly IWebHostEnvironment _hostingEnvironment;
@@ -115,14 +115,7 @@ namespace Spice.Areas.Admin.Controllers {
                 var extensions = Path.GetExtension(files[0].FileName);
                 await using (var fileStream = new FileStream(Path.Combine(upload, itemFromDb.Id + extensions)
                     , FileMode.Create)) {
-                    var allMenuItemImages = new DirectoryInfo(upload).GetFiles();
-                    foreach (var file in allMenuItemImages) {
-                        var fileName = file.Name.Trim().Split(".")[0];
-                        if (fileName.Trim() == itemFromDb.Id.ToString()) {
-                            System.IO.File.Delete(file.FullName);
-                            break;
-                        }
-                    }
+                    var allMenuItemImages = new DirectoryInfo(Path.Combine(webRootPath, "images")).GetFiles();
                     await files[0].CopyToAsync(fileStream);
                 }
 
@@ -131,6 +124,7 @@ namespace Spice.Areas.Admin.Controllers {
             }
 
             await _dbContext.SaveChangesAsync();
+            
             return RedirectToAction(nameof(Index));
         }
 

@@ -1,8 +1,11 @@
 ﻿@model Coupon
 @{
     ViewData["Title"] = "Detail";
+    Layout = "_Admin";
 }
-
+@section Navbar {
+    <partial name="_NavbarPartialView" model=@("Coupons") />
+}
 <h1>Detail</h1>
 @{
     string imageSrc = "";

@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Text.Encodings.Web;
 using System.Threading.Tasks;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -35,6 +33,7 @@ namespace Spice.Areas.Identity.Pages.Account
             _dbContext = dbContext;
             _signInManager = signInManager;
             _logger = logger;
+            ExternalLogins = _signInManager.GetExternalAuthenticationSchemesAsync().GetAwaiter().GetResult().ToList();
         }
 
         [BindProperty]
@@ -61,6 +60,14 @@ namespace Spice.Areas.Identity.Pages.Account
 
             [Display(Name = "Remember me?")]
             public bool RememberMe { get; set; }
+            
+        }
+
+        public class InputValidator : AbstractValidator<InputModel> {
+            public InputValidator() {
+                RuleFor(i => i.Password).Length(6, 100);
+                RuleFor(i => i.Username).Length(6, 100);
+            }
         }
 
         public async Task<IActionResult> OnGetAsync(string returnUrl = null)
@@ -72,13 +79,12 @@ namespace Spice.Areas.Identity.Pages.Account
             {
                 ModelState.AddModelError(string.Empty, ErrorMessage);
             }
-
             returnUrl = returnUrl ?? Url.Content("~/");
             
             // Clear the existing external cookie to ensure a clean login process
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 
-            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+            
             
             ReturnUrl = returnUrl;
             return Page();
@@ -89,8 +95,6 @@ namespace Spice.Areas.Identity.Pages.Account
             returnUrl = returnUrl ?? Url.Content("~/");
             if (ModelState.IsValid)
             {
-                // This doesn't count login failures towards account lockout
-                // To enable password failures to trigger account lockout, set lockoutOnFailure: true
                 var result = await _signInManager.PasswordSignInAsync(Input.Username, Input.Password, Input.RememberMe, lockoutOnFailure: true);
                 if (result.Succeeded) {
                     var user = await _dbContext.ApplicationUser
@@ -100,6 +104,10 @@ namespace Spice.Areas.Identity.Pages.Account
                         .Where(s => s.UserId == user.Id).CountAsync();
                     HttpContext.Session.SetInt32(StaticData.CartCount,cartCount);
                     _logger.LogInformation("User logged in.");
+                    var roles = await _userManager.GetRolesAsync(user);
+                    if (roles.Contains(UserRole.Manager) || roles.Contains(UserRole.FrontDesk)) {
+                        return RedirectToAction("Index","Dashboard",new {area = "Admin"});
+                    }
                     return LocalRedirect(returnUrl);
                 }
                 if (result.RequiresTwoFactor)
@@ -111,11 +119,9 @@ namespace Spice.Areas.Identity.Pages.Account
                     _logger.LogWarning("User account locked out.");
                     return RedirectToPage("./Lockout");
                 }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-                    return Page();
-                }
+
+                ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                return Page();
             }
 
             // If we got this far, something failed, redisplay form

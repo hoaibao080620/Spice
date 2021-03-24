@@ -1,6 +1,10 @@
 ﻿@model Coupon
 @{
     ViewData["Title"] = "Delete";
+    Layout = "_Admin";
+}
+@section Navbar {
+    <partial name="_NavbarPartialView" model=@("Coupons") />
 }
 
 <h1 class="text-info">Do you really want to delete ?</h1>

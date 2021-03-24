@@ -1,6 +1,10 @@
 ﻿@model Spice.Models.Coupon
 @{
     ViewData["Title"] = "Edit";
+    Layout = "_Admin";
+}
+@section Navbar {
+    <partial name="_NavbarPartialView" model=@("Coupons") />
 }
 
 <div class="backgroundWhiteBorder row">
@@ -72,3 +76,6 @@
         </form>
     </div>
 </div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial"/>
+}

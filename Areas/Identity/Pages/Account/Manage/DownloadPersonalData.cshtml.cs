@@ -48,8 +48,8 @@ namespace Spice.Areas.Identity.Pages.Account.Manage
             {
                 personalData.Add($"{l.LoginProvider} external login provider key", l.ProviderKey);
             }
-
-            Response.Headers.Add("Content-Disposition", "attachment; filename=PersonalData.json");
+            
+            Response.Headers.Add("Content-Disposition", "attachment; filename=PersonalData.txt");
             return new FileContentResult(JsonSerializer.SerializeToUtf8Bytes(personalData), "application/json");
         }
     }

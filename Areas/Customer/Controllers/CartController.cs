@@ -17,6 +17,7 @@ using Coupon = Spice.Models.Coupon;
 
 namespace Spice.Areas.Customer.Controllers {
     [Area("Customer")]
+    [Authorize]
     public class CartController : Controller {
         private readonly ApplicationDbContext _dbContext;
 
@@ -145,13 +146,16 @@ namespace Spice.Areas.Customer.Controllers {
         }
         
         public async Task<IActionResult> Summary() {
-            
             var shoppingCartDetail = new ShoppingCartDetailViewModel() {
                 OrderHeader = new OrderHeader()
             };
 
             // Get carts for order
             var currentUserId = GetCurrentUserId();
+            var user = await _dbContext.ApplicationUser.FirstOrDefaultAsync(u => u.Id == currentUserId);
+            if (!user.PhoneNumberConfirmed) {
+                return RedirectToPage("/Account/VerifyPhoneModel",new {area = "Identity"});
+            }
             var carts =await _dbContext.ShoppingCarts
                 .Where(s => s.UserId == currentUserId).ToListAsync();
             if (carts != null) {
@@ -164,7 +168,7 @@ namespace Spice.Areas.Customer.Controllers {
             var totalPrice = await GetTotalPrice(carts);
             shoppingCartDetail.OrderHeader.TotalOriginal = totalPrice;
             shoppingCartDetail.OrderHeader.TotalFinal = shoppingCartDetail.OrderHeader.TotalOriginal;
-            var user = await _dbContext.ApplicationUser.FirstOrDefaultAsync(a => a.Id == currentUserId);
+            
             shoppingCartDetail.OrderHeader.PickupName = user.Name;
             shoppingCartDetail.OrderHeader.PhoneNumber = user.PhoneNumber;
             // Set coupon code to session
@@ -179,11 +183,6 @@ namespace Spice.Areas.Customer.Controllers {
             }
             return View(shoppingCartDetail);
         }
-
-        
-
-        
-        
         
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -222,6 +221,7 @@ namespace Spice.Areas.Customer.Controllers {
         }
         
         [HttpPost]
+        [AllowAnonymous]
         public async Task<IActionResult> AddToCart(int id) {
             if (!User.Identity.IsAuthenticated) {
                 return BadRequest();
@@ -230,7 +230,7 @@ namespace Spice.Areas.Customer.Controllers {
             if (menuItem is null) {
                 return BadRequest();
             }
-
+            
             var userId = GetCurrentUserId();
             
             var cart = new ShoppingCart {

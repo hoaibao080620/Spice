@@ -58,7 +58,9 @@ namespace Spice.Areas.Customer.Controllers {
         }
         
         private async Task CommonPayment(ShoppingCartDetailViewModel cartDetail, CancellationToken cal) {
+            
             var userId = GetCurrentUserId();
+            
             cartDetail.Carts = await _dbContext.ShoppingCarts.Where(s => s.UserId == userId).ToListAsync(cal);
             cartDetail.OrderHeader.ApplicationUser =
                 await _dbContext.ApplicationUser.FirstOrDefaultAsync(a => a.Id == userId,cal);
@@ -112,6 +114,8 @@ namespace Spice.Areas.Customer.Controllers {
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Payment(ShoppingCartDetailViewModel cartDetail) {
             await CommonPayment(cartDetail, new CancellationToken(false));
+            var userId = GetCurrentUserId();
+            var hostname = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
             var items = new List<SessionLineItemOptions>();
             foreach (var cart in cartDetail.Carts) {
                 items.Add(new SessionLineItemOptions() {
@@ -127,6 +131,7 @@ namespace Spice.Areas.Customer.Controllers {
                     Quantity = cart.Count
                 });
             }
+            
             var options = new SessionCreateOptions
             {
                 PaymentMethodTypes = new List<string>
@@ -135,17 +140,22 @@ namespace Spice.Areas.Customer.Controllers {
                 },
                 LineItems = items
                 ,
-                Mode = "payment",
-                SuccessUrl = $"https://localhost:5001/Customer/Order/Confirm?id={cartDetail.OrderHeader.Id}",
-                CancelUrl = "https://localhost:5001/Customer/Payment/Fail",
+               
                 
-                Metadata = new Dictionary<string, string> {
-                    {"description",$"{cartDetail.OrderHeader.Id}"}
+                Mode = "payment",
+                SuccessUrl = $"{hostname}/Customer/Order/Confirm?id=" +
+                             $"{cartDetail.OrderHeader.Id}",
+                CancelUrl = $"{hostname}/Customer/Payment/Fail",
+               
+            Metadata = new Dictionary<string, string> {
+                    {"description",$"{cartDetail.OrderHeader.Id}"},
+                    {"userId",$"{userId}" }
                 }
                 
             };
-            
 
+            
+            
             var service = new SessionService();
             Session session = await service.CreateAsync(options);
             
@@ -157,52 +167,55 @@ namespace Spice.Areas.Customer.Controllers {
             if (session is null) {
                 return BadRequest();
             }
-            return View("RedirectToStripe",session);
+            return View("RedirectToStripe", session);
         }
 
         [HttpPost]
         [AllowAnonymous]
         public async Task<IActionResult> Processing() {
-            var json =await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
-            try
-            {
-                var stripeEvent = EventUtility.ConstructEvent(json,
-                    Request.Headers["Stripe-Signature"], "whsec_m8ks3AlRfPlSfkmTYyzLAfqXhIQItALy");
+            var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+            try {
+                var stripeEvent = EventUtility.ConstructEvent(
+                  json,
+                  Request.Headers["Stripe-Signature"],
+                  "whsec_auRuHfcMAuZK5DltKerSAmm7Zzbv8BS0"
+                );
                 if (stripeEvent.Type == Events.CheckoutSessionCompleted) {
-                    var session = stripeEvent.Data.Object as Session;
-                    var paymentIntent = await new PaymentIntentService().GetAsync(session?.PaymentIntentId);
-                    var charge = paymentIntent.Charges.Data[0];
-                    var orderId = Convert.ToInt32(session?.Metadata["description"]);
-                    var order = await _dbContext.OrderHeaders.FirstOrDefaultAsync(o => o.Id == orderId);
-                    
-                    if (charge.BalanceTransactionId != null) {
-                        order.TransactionId = charge.BalanceTransactionId;
-                    }
-                    else {
-                        order.PaymentStatus = OrderStatus.PaymentStatusPending;
-                    }
-                    
-                    
-                    if (session?.PaymentStatus == "paid") {
-                        order.Status = OrderStatus.StatusSubmitted;
-                        order.PaymentStatus = OrderStatus.PaymentStatusApproved;
-                        var claimIdentity = (ClaimsIdentity) User.Identity;
-                        var userId = claimIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
-                        var carts = await _dbContext.ShoppingCarts.Where(s => s.UserId == userId).ToListAsync();
-                        _dbContext.ShoppingCarts.RemoveRange(carts);
-                    }
-                    else {
-                        order.PaymentStatus =OrderStatus.PaymentStatusPending;
-                    }
+                        var session = stripeEvent.Data.Object as Session;
+                        var paymentIntent = await new PaymentIntentService().GetAsync(session?.PaymentIntentId);
+                        var charge = paymentIntent.Charges.Data[0];
+                        var orderId = Convert.ToInt32(session?.Metadata["description"]);
+                        var order = await _dbContext.OrderHeaders.FirstOrDefaultAsync(o => o.Id == orderId);
 
-                    await _dbContext.SaveChangesAsync();
+                        if (charge.BalanceTransactionId != null) {
+                            order.TransactionId = charge.BalanceTransactionId;
+                        }
+                        else {
+                            order.PaymentStatus = OrderStatus.PaymentStatusPending;
+                        }
+
+
+                        if (session?.PaymentStatus == "paid") {
+                            var userId = session?.Metadata["userId"];
+                            var carts = await _dbContext.ShoppingCarts.Where(s => s.UserId == userId).ToListAsync();
+                            _dbContext.ShoppingCarts.RemoveRange(carts);
+                            order.PaymentStatus = OrderStatus.StatusSubmitted;
+                            order.Status = OrderStatus.StatusSubmitted;
+                        }
+                        else {
+                            order.PaymentStatus = OrderStatus.PaymentStatusPending;
+                        }
+
+                        await _dbContext.SaveChangesAsync();
                 }
             }
-            catch (Exception e) {
-                
+            catch (Exception) {
+
                 return BadRequest();
             }
             return Ok();
+
+            
         }
 
         [Authorize]
@@ -299,7 +312,7 @@ namespace Spice.Areas.Customer.Controllers {
         }
         
         public async Task<IActionResult> PaypalSuccess(int orderId,string paymentId,string payerId) {
-            var order = await _dbContext.OrderHeaders.FirstOrDefaultAsync(o => o.Id == orderId);
+            var order = await _dbContext.OrderHeaders.Include(o => o.ApplicationUser).FirstOrDefaultAsync(o => o.Id == orderId);
             order.PaymentStatus = OrderStatus.PaymentStatusApproved;
             order.Status = OrderStatus.StatusSubmitted;
             order.TransactionId = paymentId;
@@ -328,7 +341,10 @@ namespace Spice.Areas.Customer.Controllers {
             
             var hostname = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
             await _dbContext.SaveChangesAsync();
-            return RedirectToAction("Confirm","Order",new {area = "Customer", id = orderId});
+            return RedirectToAction("Confirm","Order",new {
+                area = "Customer",
+                id = orderId,
+            });
         }
 
         public IActionResult Fail() {

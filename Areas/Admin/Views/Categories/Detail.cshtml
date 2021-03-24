@@ -1,8 +1,11 @@
 ﻿@model Category
 @{
     ViewData["Title"] = "Detail";
+    Layout = "_Admin";
 }
-
+@section Navbar {
+    <partial name="_NavbarPartialView" model=@("Categories") />
+}
 <h1>Detail</h1>
 
 <div class="backgroundWhiteBorder">

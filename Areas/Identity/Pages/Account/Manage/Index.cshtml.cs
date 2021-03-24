@@ -34,6 +34,7 @@ namespace Spice.Areas.Identity.Pages.Account.Manage
         {
             [Phone]
             [Display(Name = "Phone number")]
+            [RegularExpression(@"\+(84[3|5|7|8|9])+([0-9]{8})\b",ErrorMessage = "Start with +84")]
             public string PhoneNumber { get; set; }
         }
 
@@ -86,6 +87,7 @@ namespace Spice.Areas.Identity.Pages.Account.Manage
                     return RedirectToPage();
                 }
             }
+            
 
             await _signInManager.RefreshSignInAsync(user);
             StatusMessage = "Your profile has been updated";

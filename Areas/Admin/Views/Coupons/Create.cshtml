@@ -1,10 +1,13 @@
 ﻿@model Spice.Models.Coupon
 @{
     ViewData["Title"] = "Create";
+    Layout = "_Admin";
 }
-
-<div class="backgroundWhiteBorder row">
-    <div class="col-12">
+@section Navbar {
+    <partial name="_NavbarPartialView" model=@("Coupons") />
+}
+<div class="backgroundWhiteBorder row ">
+    <div class="col-7 " style="margin: 0 auto">
         <h1 class="text-center text-danger">Create Coupon</h1>
         <form method="post" asp-controller="Coupons" asp-action="Create" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -33,7 +36,7 @@
                     <label class="col-form-label">Minimum Amount</label>
                 </div>
                 <div class="col-7">
-                    <input type="number" step="any" class="form-control" asp-for="MinimumAmount">
+                    <input type="number" min="0" step="any" class="form-control" asp-for="MinimumAmount">
                 </div>
                 <span asp-validation-for="MinimumAmount" class="text-danger"></span>
             </div>
@@ -42,9 +45,10 @@
                 <div class="col-3">
                     <label class="col-form-label">Is Active</label>
                 </div>
-                <div class="col-7">
-                    <input type="checkbox"  class="form-control form-check-input" asp-for="IsActive">
+                <div class="col-2">
+                    <input type="checkbox"  class="form-control " asp-for="IsActive">
                 </div>
+                
             </div>
 
             <div class="form-group row">
@@ -71,6 +75,9 @@
         </form>
     </div>
 </div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial"/>
+}
 
 
 

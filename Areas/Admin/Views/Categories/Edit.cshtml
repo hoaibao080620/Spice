@@ -1,8 +1,11 @@
 ﻿@model Category
 @{
     ViewData["Title"] = "Edit";
+    Layout = "_Admin";
 }
-
+@section Navbar {
+    <partial name="_NavbarPartialView" model=@("Categories") />
+}
 <div class="backgroundWhiteBorder">
     <form method="post" asp-controller="Categories" asp-action="Edit">
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -15,3 +18,6 @@
         <a class="btn btn-info" asp-action="Index">Back to list</a>
     </form>
 </div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial"/>
+}

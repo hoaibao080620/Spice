@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MimeKit.Text;
+using Newtonsoft.Json;
 using Spice.Data;
 using Spice.Models;
 using Spice.Models.ViewModels;
@@ -35,8 +36,11 @@ namespace Spice.Areas.Customer.Controllers {
         
         
         public async Task<IActionResult> Index() {
+            if (User.Identity.IsAuthenticated && (User.IsInRole(UserRole.Manager) || User.IsInRole(UserRole.FrontDesk))) {
+                return RedirectToAction("Index", "Dashboard", new {area = "Admin"});
+            }
             var viewModel = new HomePageViewModel() {
-                Coupons = await _dbContext.Coupons.Where(m => m.IsActive == true).ToListAsync(),
+                Coupons = await _dbContext.Coupons.Where(m => m.IsActive).ToListAsync(),
                 Categories = await _dbContext.Categories.ToListAsync(),
                 MenuItems = await _dbContext.MenuItems.Include(m => m.SubCategory)
                     .Include(m => m.Category).ToListAsync()
@@ -49,7 +53,7 @@ namespace Spice.Areas.Customer.Controllers {
                     .Where(s => s.UserId == claim.Value).CountAsync();
                 HttpContext.Session.SetInt32(StaticData.CartCount,cartCount);
             }
-
+            
             var webPath = _webHost.WebRootPath;
             var files = Directory.GetFiles($@"{webPath}\images\Gallery");
             for (var i = 0;i<files.Length;i++) {
@@ -60,12 +64,37 @@ namespace Spice.Areas.Customer.Controllers {
             
             return View(viewModel);
         }
+        
+        public async Task<IActionResult> Search(string query) {
+            if (string.IsNullOrWhiteSpace(query) || string.IsNullOrEmpty(query)) {
+                return RedirectToAction(nameof(Index));
+            }
+            var viewModel = new HomePageViewModel() {
+                Coupons = await _dbContext.Coupons.Where(m => m.IsActive).ToListAsync(),
+                Categories = await _dbContext.Categories.ToListAsync(),
+                MenuItems = await _dbContext.MenuItems.Include(m => m.SubCategory)
+                    .Include(m => m.Category)
+                    .Where(m => m.ItemName.Contains(query))
+                    .ToListAsync()
+            };
+            
+            var webPath = _webHost.WebRootPath;
+            var files = Directory.GetFiles($@"{webPath}\images\Gallery");
+            for (var i = 0;i<files.Length;i++) {
+                files[i] = files[i].Substring(webPath.Length);
+            }
+
+            viewModel.Images = files;
+            
+            return View("Index",viewModel);
+        }
+
 
         public IActionResult Privacy() {
             return View();
         }
 
-        [Authorize]
+        
         public async Task<IActionResult> Detail(int id) {
             var menuItemFromDb = await _dbContext.MenuItems
                 .Include(m => m.Category)
@@ -81,10 +110,10 @@ namespace Spice.Areas.Customer.Controllers {
             return View(shoppingCart);
             
         }
-
-        [Authorize]
+        
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> Detail(ShoppingCart shoppingCart) {
             if (!ModelState.IsValid) {
                 var menuItemFromDb = await _dbContext.MenuItems
@@ -101,7 +130,6 @@ namespace Spice.Areas.Customer.Controllers {
                 };
                 return View(shoppingCartView);
             }
-            shoppingCart.MenuItem.Id = shoppingCart.MenuItemId;
             shoppingCart.DateCreated = DateTime.Now;
             
             var claimsIdentity = (ClaimsIdentity) User.Identity;
@@ -117,8 +145,6 @@ namespace Spice.Areas.Customer.Controllers {
             else {
                 existShoppingCart.Count += shoppingCart.Count;
             }
-
-            
             await _dbContext.SaveChangesAsync();
             var cartCount = await _dbContext.ShoppingCarts
                 .Where(s => s.UserId == userId).CountAsync();

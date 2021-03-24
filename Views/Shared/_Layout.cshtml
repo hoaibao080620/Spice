@@ -1,11 +1,11 @@
 ﻿@using Spice.Utilities
 @using Microsoft.AspNetCore.Http
 @using System.Security.Claims
-@using Microsoft.CodeAnalysis
 @using Microsoft.EntityFrameworkCore
 @using Spice.Data
 @inject IHttpContextAccessor HttpContextAccessor
 @inject ApplicationDbContext DbContext
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,13 +15,15 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" />
     <link rel="stylesheet" href="~/css/jquery-ui.css" />
-    <link href="assets/css/style.css" rel="stylesheet">
+    <link href="~/assets/css/style.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i
 ,600,600i,700,700i|Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1
 ,600;1,700|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.13.0/css/all.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+          rel="stylesheet">
     
 </head>
 <body >
@@ -32,6 +34,9 @@
         var cartCount = await DbContext.ShoppingCarts
             .Where(s => s.UserId == claim.Value).CountAsync();
         HttpContextAccessor.HttpContext.Session.SetInt32(StaticData.CartCount,cartCount);
+    }
+    else {
+        HttpContextAccessor.HttpContext.Session.SetInt32(StaticData.CartCount, 0);
     }
 }
 <header>
@@ -45,50 +50,33 @@
             <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
                 <partial name="_LoginPartial"/>
                 <ul class="navbar-nav flex-grow-1">
-                    @if (User.IsInRole(UserRole.Manager)) {
-                        <li class="dropdown">
-                            <button class="btn btn-light dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                Content Management
-                            </button>
-                            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                <a class="dropdown-item" asp-area="Admin" asp-controller="Categories"
-                                   asp-action="Index">Category</a>
-                                <a class="dropdown-item" asp-area="Admin" asp-controller="SubCategories"
-                                   asp-action="Index">Sub Category</a>
-                                <a class="dropdown-item" asp-area="Admin" asp-controller="MenuItems"
-                                   asp-action="Index">Menu Item</a>
-                                <a class="dropdown-item" asp-area="Admin" asp-controller="Coupons"
-                                   asp-action="Index">Coupon</a>
-                                <a class="dropdown-item" asp-area="Admin" asp-controller="User"
-                                   asp-action="Index">User</a>
-                            </div>
-                        </li>
-
-                    }
                     
-                    @if (User.IsInRole(UserRole.Manager) || User.IsInRole(UserRole.EndCustomer)) {
+                    
+                    @if (User.IsInRole(UserRole.EndCustomer)) {
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="Customer" asp-controller="Order" asp-action="OrderHistory">
                                 Order History
                             </a>
                         </li>
+                        @if (HttpContextAccessor.HttpContext.Session.GetInt32(StaticData.CartCount) != null) {
+                            <li class="nav-item">
+                                <a  class="nav-link text-dark" asp-area="Customer" asp-controller="Cart" asp-action="Index">
+                                    <i class="fas fa-cart-plus"></i>
+                                    (<span id="cartCount">@HttpContextAccessor.HttpContext.Session.GetInt32(StaticData.CartCount)
+                                    </span>)
+                                </a>
+                            </li>
+                        }
+                        else {
+                            <li class="nav-item">
+                                <a  asp-area="Customer" asp-controller="Cart" asp-action="Index"
+                                    class="nav-link text-dark"><i class="fas fa-cart-plus"></i>
+                                    (<span id="cartCount">0</span>) </a>
+                            </li>
+                        }
                     }
-                    @if (HttpContextAccessor.HttpContext.Session.GetInt32(StaticData.CartCount) != null) {
-                        <li class="nav-item">
-                            <a  class="nav-link text-dark" asp-area="Customer" asp-controller="Cart" asp-action="Index">
-                                <i class="fas fa-cart-plus"></i>
-                                (<span id="cartCount">@HttpContextAccessor.HttpContext.Session.GetInt32(StaticData.CartCount)
-                                </span>)
-                            </a>
-                        </li>
-                    }
-                    else {
-                        <li class="nav-item">
-                            <a  asp-area="Customer" asp-controller="Cart" asp-action="Index"
-                                class="nav-link text-dark"><i class="fas fa-cart-plus"></i>
-                                (<span id="cartCount">0</span>) </a>
-                        </li>
-                    }
+                    
+                    
                     <li class="nav-item">
                         <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                     </li>
@@ -101,7 +89,7 @@
     </nav>
 </header>
 @* <div style="margin-top: 4rem"></div> *@
-<div style="margin-top: 4rem">
+<div  style="margin-top: 4rem;">
    <div class="backgroundImage">
        @await RenderSectionAsync("backgroundImage",false)
    </div>

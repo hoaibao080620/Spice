@@ -18,6 +18,7 @@ namespace Spice.Models {
         [Required]
         public double Discount { get; set; }
         [Required]
+        [Range(1,1000,ErrorMessage = "Minimum is 1")]
         public double MinimumAmount { get; set; }
         public byte[] CouponImage { get; set; }
         [Required]

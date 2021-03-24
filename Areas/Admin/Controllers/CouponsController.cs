@@ -9,7 +9,7 @@ using Spice.Utilities;
 
 namespace Spice.Areas.Admin.Controllers {
     [Area("Admin")]
-    [Authorize(Roles = UserRole.Manager)]
+    [Authorize(Roles = UserRole.Manager+","+UserRole.FrontDesk)]
     public class CouponsController : Controller {
         private readonly ApplicationDbContext _db;
 
